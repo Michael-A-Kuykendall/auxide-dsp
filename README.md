@@ -1,6 +1,6 @@
 # auxide-dsp
 
-<img src="https://raw.githubusercontent.com/Michael-A-Kuykendall/auxide-dsp/main/assets/auxide-dsp-logo.png" alt="auxide-dsp logo" width="200"/>
+<img src="https://raw.githubusercontent.com/Michael-A-Kuykendall/auxide-dsp/master/assets/auxide-dsp-logo.png" alt="auxide-dsp logo" width="200"/>
 
 DSP utilities and trait-based nodes for Auxide 0.2. This crate supplies helper functions, wavetable and window generators, and NodeDef-based DSP blocks that plug into the Auxide kernel via `NodeType::External`.
 
