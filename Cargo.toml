@@ -6,7 +6,7 @@ license = "MIT"
 readme = "README.md"
 description = "Comprehensive DSP node library for Auxide audio graphs. Includes oscillators, filters, effects, envelopes, and modulators for real-time audio synthesis."
 repository = "https://github.com/Michael-A-Kuykendall/auxide-dsp"
-keywords = ["audio", "dsp", "synthesis", "real-time", "oscillators", "filters", "effects"]
+keywords = ["audio", "dsp", "synthesis", "real-time", "oscillators"]
 categories = ["multimedia::audio", "api-bindings"]
 
 [dependencies]
