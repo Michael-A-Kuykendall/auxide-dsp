@@ -1,0 +1,13 @@
+[package]
+name = "auxide-dsp"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+readme = "README.md"
+
+[dependencies]
+auxide = "0.2.0"
+realfft = "3.3"
+num-complex = "0.4"
+
+[dev-dependencies]
