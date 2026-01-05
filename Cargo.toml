@@ -10,8 +10,9 @@ keywords = ["audio", "dsp", "synthesis", "real-time", "oscillators"]
 categories = ["multimedia::audio", "api-bindings"]
 
 [dependencies]
-auxide = "0.2.0"
+auxide = { path = "../auxide" }
 realfft = "3.3"
 num-complex = "0.4"
 
 [dev-dependencies]
+dhat = "0.3"

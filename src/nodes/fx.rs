@@ -55,8 +55,8 @@ impl NodeDef for Delay {
         _sample_rate: f32,
     ) {
         let input = &inputs[0];
-        let feedback_mod = if inputs.len() > 1 { inputs[1] } else { &[] };
-        let mix_mod = if inputs.len() > 2 { inputs[2] } else { &[] };
+        let feedback_mod = if inputs.len() > 1 { inputs[1] } else { &[][..] };
+        let mix_mod = if inputs.len() > 2 { inputs[2] } else { &[][..] };
         let output = &mut outputs[0];
 
         let delay_samples = state.buffer.len();

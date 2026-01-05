@@ -17,6 +17,10 @@ fn saw_runs() {
     let mut out = vec![vec![0.0; 64]];
     node.process_block(&mut state, &[], &mut out, 48_000.0);
     assert!(non_silent(&out[0]));
+    // Golden check: Saw wave should start near 0 and rise
+    assert!(out[0][0].abs() < 0.1); // Near 0 at phase 0
+    assert!(out[0][16] > 0.0); // Positive in first quadrant
+    assert!(out[0][32] > 0.5); // High in second quadrant
 }
 
 #[test]

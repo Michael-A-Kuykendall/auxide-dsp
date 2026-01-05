@@ -69,8 +69,8 @@ impl NodeDef for SvfFilter {
         sample_rate: f32,
     ) {
         let input = &inputs[0];
-        let cutoff_mod = if inputs.len() > 1 { inputs[1] } else { &[] };
-        let resonance_mod = if inputs.len() > 2 { inputs[2] } else { &[] };
+        let cutoff_mod = if inputs.len() > 1 { inputs[1] } else { &[][..] };
+        let resonance_mod = if inputs.len() > 2 { inputs[2] } else { &[][..] };
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
