@@ -52,13 +52,36 @@ update_readme() {
 
     echo -e "${YELLOW}Updating $crate_name README...${NC}"
 
-    # Create the new table content
-    TABLE_CONTENT="| Crate | Description | Version |
+    # Create the new table content with current crate bolded
+    if [ "$crate_name" = "../auxide" ]; then
+        TABLE_CONTENT="| Crate | Description | Version |
+|-------|-------------|---------|
+| **[auxide](https://github.com/Michael-A-Kuykendall/auxide)** | Real-time-safe audio graph kernel | $AUXIDE_VERSION |
+| [auxide-dsp](https://github.com/Michael-A-Kuykendall/auxide-dsp) | DSP nodes library | $DSP_VERSION |
+| [auxide-io](https://github.com/Michael-A-Kuykendall/auxide-io) | Audio I/O layer | $IO_VERSION |
+| [auxide-midi](https://github.com/Michael-A-Kuykendall/auxide-midi) | MIDI integration | $MIDI_VERSION |"
+    elif [ "$crate_name" = "." ]; then
+        TABLE_CONTENT="| Crate | Description | Version |
 |-------|-------------|---------|
 | [auxide](https://github.com/Michael-A-Kuykendall/auxide) | Real-time-safe audio graph kernel | $AUXIDE_VERSION |
 | **[auxide-dsp](https://github.com/Michael-A-Kuykendall/auxide-dsp)** | DSP nodes library | $DSP_VERSION |
 | [auxide-io](https://github.com/Michael-A-Kuykendall/auxide-io) | Audio I/O layer | $IO_VERSION |
 | [auxide-midi](https://github.com/Michael-A-Kuykendall/auxide-midi) | MIDI integration | $MIDI_VERSION |"
+    elif [ "$crate_name" = "../auxide-io" ]; then
+        TABLE_CONTENT="| Crate | Description | Version |
+|-------|-------------|---------|
+| [auxide](https://github.com/Michael-A-Kuykendall/auxide) | Real-time-safe audio graph kernel | $AUXIDE_VERSION |
+| [auxide-dsp](https://github.com/Michael-A-Kuykendall/auxide-dsp) | DSP nodes library | $DSP_VERSION |
+| **[auxide-io](https://github.com/Michael-A-Kuykendall/auxide-io)** | Audio I/O layer | $IO_VERSION |
+| [auxide-midi](https://github.com/Michael-A-Kuykendall/auxide-midi) | MIDI integration | $MIDI_VERSION |"
+    elif [ "$crate_name" = "../auxide-midi" ]; then
+        TABLE_CONTENT="| Crate | Description | Version |
+|-------|-------------|---------|
+| [auxide](https://github.com/Michael-A-Kuykendall/auxide) | Real-time-safe audio graph kernel | $AUXIDE_VERSION |
+| [auxide-dsp](https://github.com/Michael-A-Kuykendall/auxide-dsp) | DSP nodes library | $DSP_VERSION |
+| [auxide-io](https://github.com/Michael-A-Kuykendall/auxide-io) | Audio I/O layer | $IO_VERSION |
+| **[auxide-midi](https://github.com/Michael-A-Kuykendall/auxide-midi)** | MIDI integration | $MIDI_VERSION |"
+    fi
 
     # Replace the table using awk (more reliable than sed for multi-line)
     awk -v table="$TABLE_CONTENT" '
