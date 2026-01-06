@@ -1,5 +1,7 @@
 use auxide::node::NodeDef;
-use auxide_dsp::{Chorus, ConvolutionReverb, Delay, Flanger, MultitapDelay, Phaser, SimpleReverb, Tremolo};
+use auxide_dsp::{
+    Chorus, ConvolutionReverb, Delay, Flanger, MultitapDelay, Phaser, SimpleReverb, Tremolo,
+};
 
 fn non_silent(output: &[f32]) -> bool {
     output.iter().any(|&x| x.abs() > 1e-6)
@@ -90,10 +92,7 @@ fn multitap_delay_runs() {
 fn convolution_reverb_runs() {
     // Simple short IR
     let ir: Vec<f32> = (0..32).map(|i| (1.0 - i as f32 / 32.0).powf(2.0)).collect();
-    let node = ConvolutionReverb {
-        ir,
-        mix: 0.5,
-    };
+    let node = ConvolutionReverb { ir, mix: 0.5 };
     let mut state = node.init_state(44100.0, 64);
     let mut out = vec![vec![0.0; 64]];
     // Process multiple blocks to get convolution output

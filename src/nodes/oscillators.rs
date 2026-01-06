@@ -103,7 +103,9 @@ impl NodeDef for SawOsc {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
@@ -144,7 +146,9 @@ impl NodeDef for SquareOsc {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let pw = self.pulse_width.clamp(0.01, 0.99);
         let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
@@ -190,12 +194,15 @@ impl NodeDef for TriangleOsc {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
             let saw = 2.0 * phase - 1.0;
-            *sample = (2.0 / std::f32::consts::PI) * (saw.abs() * std::f32::consts::PI / 2.0 - std::f32::consts::PI / 4.0).sin();
+            *sample = (2.0 / std::f32::consts::PI)
+                * (saw.abs() * std::f32::consts::PI / 2.0 - std::f32::consts::PI / 4.0).sin();
             state.phase += inc;
             if state.phase >= 1.0 {
                 state.phase -= 1.0;
@@ -230,7 +237,9 @@ impl NodeDef for PulseOsc {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let pw = self.pulse_width.clamp(0.01, 0.99);
         let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
@@ -270,7 +279,9 @@ impl NodeDef for WavetableOsc {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let table = &*self.table;
         if table.is_empty() {
             out.fill(0.0);
@@ -318,14 +329,18 @@ impl NodeDef for SuperSaw {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         let voices = state.phases.len().max(1);
-        let base_inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let base_inc =
+            freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         let detune = self.detune.max(0.0);
         for sample in out.iter_mut() {
             let mut acc = 0.0;
             for (i, phase) in state.phases.iter_mut().enumerate() {
-                let detune_factor = 1.0 + detune * ((i as f32) - (voices as f32 - 1.0) / 2.0) / (voices as f32);
+                let detune_factor =
+                    1.0 + detune * ((i as f32) - (voices as f32 - 1.0) / 2.0) / (voices as f32);
                 let inc = base_inc * detune_factor;
                 acc += 2.0 * *phase - 1.0;
                 *phase += inc;
@@ -368,7 +383,9 @@ impl NodeDef for WhiteNoise {
         outputs: &mut [Vec<f32>],
         _sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         for sample in out.iter_mut() {
             // LCG
             state.rng = state.rng.wrapping_mul(6364136223846793005).wrapping_add(1);
@@ -408,7 +425,9 @@ impl NodeDef for PinkNoise {
         outputs: &mut [Vec<f32>],
         _sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         for sample in out.iter_mut() {
             state.rng = state.rng.wrapping_mul(6364136223846793005).wrapping_add(1);
             let white = ((state.rng >> 32) as u32) as f32 / (u32::MAX as f32) * 2.0 - 1.0;
@@ -455,7 +474,9 @@ impl NodeDef for BrownNoise {
         outputs: &mut [Vec<f32>],
         _sample_rate: f32,
     ) {
-        let Some(out) = outputs.get_mut(0) else { return; };
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
         for sample in out.iter_mut() {
             state.rng = state.rng.wrapping_mul(6364136223846793005).wrapping_add(1);
             let white = ((state.rng >> 32) as u32) as f32 / (u32::MAX as f32) * 2.0 - 1.0;

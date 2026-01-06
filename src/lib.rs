@@ -2,14 +2,14 @@
 
 #![forbid(unsafe_code)]
 
+pub mod builders;
 pub mod helpers;
+pub mod nodes;
 pub mod wavetables;
 pub mod windows;
-pub mod nodes;
-pub mod builders;
 
+pub use builders::*;
 pub use helpers::*;
+pub use nodes::*;
 pub use wavetables::*;
 pub use windows::*;
-pub use nodes::*;
-pub use builders::*;

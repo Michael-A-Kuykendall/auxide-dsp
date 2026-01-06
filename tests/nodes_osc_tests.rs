@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use auxide::node::NodeDef;
+use auxide_dsp::generate_sine_table;
 use auxide_dsp::nodes::oscillators::*;
-use auxide_dsp::{generate_sine_table};
 
 fn non_silent(buf: &[f32]) -> bool {
     buf.iter().any(|&v| v.abs() > 1e-6)
@@ -21,7 +21,10 @@ fn saw_runs() {
 
 #[test]
 fn square_runs() {
-    let node = SquareOsc { freq: 220.0, pulse_width: 0.5 };
+    let node = SquareOsc {
+        freq: 220.0,
+        pulse_width: 0.5,
+    };
     let mut state = node.init_state(48_000.0, 64);
     let mut out = vec![vec![0.0; 64]];
     node.process_block(&mut state, &[], &mut out, 48_000.0);
@@ -40,7 +43,11 @@ fn wavetable_runs() {
 
 #[test]
 fn supersaw_runs() {
-    let node = SuperSaw { freq: 110.0, detune: 0.1, voices: 4 };
+    let node = SuperSaw {
+        freq: 110.0,
+        detune: 0.1,
+        voices: 4,
+    };
     let mut state = node.init_state(48_000.0, 64);
     let mut out = vec![vec![0.0; 64]];
     node.process_block(&mut state, &[], &mut out, 48_000.0);

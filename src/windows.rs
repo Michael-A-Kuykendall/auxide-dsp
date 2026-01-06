@@ -28,8 +28,7 @@ pub fn blackman_window(size: usize) -> Vec<f32> {
     (0..size)
         .map(|n| {
             let phase = (n as f32) / (size as f32);
-            A0
-                - A1 * (2.0 * std::f32::consts::PI * phase).cos()
+            A0 - A1 * (2.0 * std::f32::consts::PI * phase).cos()
                 + A2 * (4.0 * std::f32::consts::PI * phase).cos()
         })
         .collect()

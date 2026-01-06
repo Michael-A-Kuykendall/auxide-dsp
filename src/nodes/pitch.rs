@@ -21,15 +21,27 @@ impl NodeDef for PitchShifter {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // shift_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // shift_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -59,13 +71,20 @@ impl NodeDef for PitchShifter {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let shift = self.shift + if shift_mod.is_empty() { 0.0 } else { shift_mod[i] };
+            let shift = self.shift
+                + if shift_mod.is_empty() {
+                    0.0
+                } else {
+                    shift_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let ratio = 2.0_f32.powf(shift / 12.0);
             let delay_samples = (sample_rate / 440.0 / ratio) as usize; // approximate for A4
 
-            let delayed_idx = (state.index + state.buffer.len() - delay_samples.min(state.buffer.len() - 1)) % state.buffer.len();
+            let delayed_idx = (state.index + state.buffer.len()
+                - delay_samples.min(state.buffer.len() - 1))
+                % state.buffer.len();
             let delayed = state.buffer[delayed_idx];
 
             output[i] = input[i] * (1.0 - mix) + delayed * mix;
@@ -93,12 +112,18 @@ impl NodeDef for SpectralGate {
     type State = SpectralGateState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -136,7 +161,11 @@ impl NodeDef for SpectralGate {
             } else {
                 state.envelope
             };
-            let gain_linear = if state.envelope > 0.0 { gain / state.envelope } else { 0.0 };
+            let gain_linear = if state.envelope > 0.0 {
+                gain / state.envelope
+            } else {
+                0.0
+            };
 
             output[i] = input[i] * gain_linear;
         }
@@ -158,12 +187,18 @@ impl NodeDef for PitchDetector {
     type State = PitchDetectorState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }]; // pitch in Hz
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]; // pitch in Hz
         PORTS
     }
 
@@ -189,7 +224,9 @@ impl NodeDef for PitchDetector {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            if (state.prev_sample <= 0.0 && input[i] > 0.0) || (state.prev_sample >= 0.0 && input[i] < 0.0) {
+            if (state.prev_sample <= 0.0 && input[i] > 0.0)
+                || (state.prev_sample >= 0.0 && input[i] < 0.0)
+            {
                 // zero crossing
                 let freq = sample_rate / state.period.max(1.0);
                 output[i] = freq;

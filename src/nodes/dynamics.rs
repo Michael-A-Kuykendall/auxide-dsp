@@ -22,14 +22,23 @@ impl NodeDef for Compressor {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // sidechain
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // sidechain
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -94,12 +103,18 @@ impl NodeDef for Limiter {
     type State = LimiterState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -137,7 +152,11 @@ impl NodeDef for Limiter {
             } else {
                 state.envelope
             };
-            let gain_linear = if state.envelope > 0.0 { gain / state.envelope } else { 1.0 };
+            let gain_linear = if state.envelope > 0.0 {
+                gain / state.envelope
+            } else {
+                1.0
+            };
 
             output[i] = input[i] * gain_linear;
         }
@@ -163,12 +182,18 @@ impl NodeDef for NoiseGate {
     type State = GateState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -206,7 +231,11 @@ impl NodeDef for NoiseGate {
             } else {
                 state.envelope
             };
-            let gain_linear = if state.envelope > 0.0 { gain / state.envelope } else { 0.0 };
+            let gain_linear = if state.envelope > 0.0 {
+                gain / state.envelope
+            } else {
+                0.0
+            };
 
             output[i] = input[i] * gain_linear;
         }
@@ -232,12 +261,18 @@ impl NodeDef for Expander {
     type State = ExpanderState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -275,7 +310,11 @@ impl NodeDef for Expander {
             } else {
                 state.envelope
             };
-            let gain_linear = if state.envelope > 0.0 { gain / state.envelope } else { 0.0 };
+            let gain_linear = if state.envelope > 0.0 {
+                gain / state.envelope
+            } else {
+                0.0
+            };
 
             output[i] = input[i] * gain_linear;
         }

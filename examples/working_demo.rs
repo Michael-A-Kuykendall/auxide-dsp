@@ -1,12 +1,12 @@
-use auxide::graph::{Graph, Edge, PortId, Rate};
+use auxide::graph::{Edge, Graph, PortId, Rate};
 use auxide::plan::Plan;
 use auxide::rt::Runtime;
-use auxide_dsp::nodes::oscillators::{SawOsc, Constant};
+use auxide_dsp::nodes::dynamics::Compressor;
 use auxide_dsp::nodes::filters::{SvfFilter, SvfMode};
 use auxide_dsp::nodes::fx::{Delay, SimpleReverb, Tremolo};
-use auxide_dsp::nodes::dynamics::Compressor;
-use auxide_dsp::nodes::shapers::{WaveShaper, Overdrive};
-use auxide_dsp::nodes::utility::{StereoPanner, RMSMeter};
+use auxide_dsp::nodes::oscillators::{Constant, SawOsc};
+use auxide_dsp::nodes::shapers::{Overdrive, WaveShaper};
+use auxide_dsp::nodes::utility::{RMSMeter, StereoPanner};
 
 fn main() {
     println!("🎛️  Auxide-DSP Comprehensive Demo");
@@ -23,33 +23,45 @@ fn main() {
 
     println!("🎛️  Adding filters...");
     let svf_lp_id = graph.add_external_node(SvfFilter {
-        cutoff: 1000.0, resonance: 0.5, mode: SvfMode::Lowpass,
+        cutoff: 1000.0,
+        resonance: 0.5,
+        mode: SvfMode::Lowpass,
     });
 
     println!("🌊 Adding modulation...");
     let tremolo_id = graph.add_external_node(Tremolo {
-        rate: 5.0, depth: 0.5,
+        rate: 5.0,
+        depth: 0.5,
     });
 
     println!("⏰ Adding time-based effects...");
     let delay_id = graph.add_external_node(Delay {
-        delay_ms: 300.0, feedback: 0.3, mix: 0.2,
+        delay_ms: 300.0,
+        feedback: 0.3,
+        mix: 0.2,
     });
     let reverb_id = graph.add_external_node(SimpleReverb {
-        decay: 0.5, mix: 0.3,
+        decay: 0.5,
+        mix: 0.3,
     });
 
     println!("📉 Adding dynamics processing...");
     let compressor_id = graph.add_external_node(Compressor {
-        threshold: 6.0, ratio: 2.0, attack_ms: 10.0, release_ms: 100.0, makeup_gain: 1.0,
+        threshold: 6.0,
+        ratio: 2.0,
+        attack_ms: 10.0,
+        release_ms: 100.0,
+        makeup_gain: 1.0,
     });
 
     println!("📈 Adding waveshaping...");
     let waveshaper_id = graph.add_external_node(WaveShaper {
-        drive: 2.0, mix: 0.5,
+        drive: 2.0,
+        mix: 0.5,
     });
     let overdrive_id = graph.add_external_node(Overdrive {
-        drive: 3.0, mix: 0.6,
+        drive: 3.0,
+        mix: 0.6,
     });
 
     println!("📊 Adding analysis...");
@@ -125,11 +137,18 @@ fn main() {
         }
 
         // Calculate some statistics
-        let rms = (output_buffer.iter().map(|x| x * x).sum::<f32>() / output_buffer.len() as f32).sqrt();
+        let rms =
+            (output_buffer.iter().map(|x| x * x).sum::<f32>() / output_buffer.len() as f32).sqrt();
         let peak = output_buffer.iter().cloned().fold(0.0, f32::max);
         let mean = output_buffer.iter().sum::<f32>() / output_buffer.len() as f32;
 
-        println!("  Block {:2}: RMS={:.4}, Peak={:.4}, Mean={:.4}", block + 1, rms, peak, mean);
+        println!(
+            "  Block {:2}: RMS={:.4}, Peak={:.4}, Mean={:.4}",
+            block + 1,
+            rms,
+            peak,
+            mean
+        );
     }
 
     println!("\n🎉 Demo completed successfully!");

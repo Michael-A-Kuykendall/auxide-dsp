@@ -34,15 +34,27 @@ impl NodeDef for SvfFilter {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio },
-            Port { id: PortId(1), rate: Rate::Audio },
-            Port { id: PortId(2), rate: Rate::Audio },
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            },
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -74,8 +86,18 @@ impl NodeDef for SvfFilter {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let cutoff = self.cutoff + if cutoff_mod.is_empty() { 0.0 } else { cutoff_mod[i] };
-            let resonance = self.resonance + if resonance_mod.is_empty() { 0.0 } else { resonance_mod[i] };
+            let cutoff = self.cutoff
+                + if cutoff_mod.is_empty() {
+                    0.0
+                } else {
+                    cutoff_mod[i]
+                };
+            let resonance = self.resonance
+                + if resonance_mod.is_empty() {
+                    0.0
+                } else {
+                    resonance_mod[i]
+                };
 
             let f = freq_to_phase_increment(cutoff, sample_rate) * 2.0;
             let k = 2.0 - 2.0 * resonance.clamp(0.0, 1.0);
@@ -129,15 +151,27 @@ impl NodeDef for LadderFilter {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio },
-            Port { id: PortId(1), rate: Rate::Audio },
-            Port { id: PortId(2), rate: Rate::Audio },
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            },
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -167,8 +201,18 @@ impl NodeDef for LadderFilter {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let cutoff = self.cutoff + if cutoff_mod.is_empty() { 0.0 } else { cutoff_mod[i] };
-            let resonance = self.resonance + if resonance_mod.is_empty() { 0.0 } else { resonance_mod[i] };
+            let cutoff = self.cutoff
+                + if cutoff_mod.is_empty() {
+                    0.0
+                } else {
+                    cutoff_mod[i]
+                };
+            let resonance = self.resonance
+                + if resonance_mod.is_empty() {
+                    0.0
+                } else {
+                    resonance_mod[i]
+                };
 
             let fc = cutoff / sample_rate;
             let k = resonance * 4.0;
@@ -214,15 +258,27 @@ impl NodeDef for CombFilter {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio },
-            Port { id: PortId(1), rate: Rate::Audio },
-            Port { id: PortId(2), rate: Rate::Audio },
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            },
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -297,12 +353,18 @@ impl NodeDef for FormantFilter {
     type State = FormantState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -372,12 +434,18 @@ impl NodeDef for BiquadFilter {
     type State = BiquadFilterState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -407,7 +475,8 @@ impl NodeDef for BiquadFilter {
         for i in 0..input.len() {
             let x = input[i];
             let y = self.b0 * x + self.b1 * state.x1 + self.b2 * state.x2
-                  - self.a1 * state.y1 - self.a2 * state.y2;
+                - self.a1 * state.y1
+                - self.a2 * state.y2;
 
             state.x2 = state.x1;
             state.x1 = x;
@@ -437,12 +506,18 @@ impl NodeDef for AllpassFilter {
     type State = AllpassFilterState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 

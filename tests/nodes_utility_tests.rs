@@ -1,5 +1,7 @@
 use auxide::node::NodeDef;
-use auxide_dsp::nodes::utility::{Crossfader, MidSideProcessor, ParamSmoother, RingMod, RMSMeter, StereoPanner, StereoWidth};
+use auxide_dsp::nodes::utility::{
+    Crossfader, MidSideProcessor, ParamSmoother, RMSMeter, RingMod, StereoPanner, StereoWidth,
+};
 
 fn non_silent(output: &[f32]) -> bool {
     output.iter().any(|&x| x.abs() > 1e-6)

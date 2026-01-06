@@ -35,7 +35,9 @@ fn pitch_detector_runs() {
     let mut state = node.init_state(44100.0, 64);
     let mut out = vec![vec![0.0; 64]];
     // Sine wave at 440 Hz
-    let input = (0..64).map(|i| (i as f32 * 440.0 * 2.0 * std::f32::consts::PI / 44100.0).sin()).collect::<Vec<f32>>();
+    let input = (0..64)
+        .map(|i| (i as f32 * 440.0 * 2.0 * std::f32::consts::PI / 44100.0).sin())
+        .collect::<Vec<f32>>();
     node.process_block(&mut state, &[&input], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
 }

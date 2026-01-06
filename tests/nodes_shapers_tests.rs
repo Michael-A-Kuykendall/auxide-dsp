@@ -1,5 +1,7 @@
 use auxide::node::NodeDef;
-use auxide_dsp::{BitCrusher, DcBlocker, HardClip, Overdrive, SoftClip, TubeSaturation, WaveShaper};
+use auxide_dsp::{
+    BitCrusher, DcBlocker, HardClip, Overdrive, SoftClip, TubeSaturation, WaveShaper,
+};
 
 fn non_silent(output: &[f32]) -> bool {
     output.iter().any(|&x| x.abs() > 1e-6)
@@ -46,7 +48,9 @@ fn dc_blocker_runs() {
     let node = DcBlocker { cutoff: 10.0 };
     let mut state = node.init_state(44100.0, 64);
     let mut out = vec![vec![0.0; 64]];
-    let input = (0..64).map(|i| (i as f32 / 64.0) * 2.0 - 1.0).collect::<Vec<f32>>();
+    let input = (0..64)
+        .map(|i| (i as f32 / 64.0) * 2.0 - 1.0)
+        .collect::<Vec<f32>>();
     node.process_block(&mut state, &[&input], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
 }

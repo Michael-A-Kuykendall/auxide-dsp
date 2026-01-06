@@ -14,7 +14,9 @@ impl Default for SynthBuilder {
 
 impl SynthBuilder {
     pub fn new() -> Self {
-        Self { graph: Graph::new() }
+        Self {
+            graph: Graph::new(),
+        }
     }
 
     pub fn add_oscillator<T: auxide::node::NodeDef + 'static>(mut self, osc: T) -> Self {
@@ -55,7 +57,9 @@ impl Default for EffectsChainBuilder {
 
 impl EffectsChainBuilder {
     pub fn new() -> Self {
-        Self { graph: Graph::new() }
+        Self {
+            graph: Graph::new(),
+        }
     }
 
     pub fn add_input(mut self) -> Self {

@@ -1,5 +1,7 @@
 use auxide::node::NodeDef;
-use auxide_dsp::{AllpassFilter, BiquadFilter, CombFilter, FormantFilter, LadderFilter, SvfFilter, SvfMode};
+use auxide_dsp::{
+    AllpassFilter, BiquadFilter, CombFilter, FormantFilter, LadderFilter, SvfFilter, SvfMode,
+};
 
 fn non_silent(output: &[f32]) -> bool {
     output.iter().any(|&x| x.abs() > 1e-6)

@@ -1,14 +1,16 @@
-use auxide::graph::{Graph, NodeId, PortId, Edge, Rate};
+use auxide::graph::{Edge, Graph, NodeId, PortId, Rate};
 use auxide::plan::Plan;
 use auxide::rt::Runtime;
-use auxide_dsp::nodes::oscillators::{SawOsc, SquareOsc, TriangleOsc, SuperSaw, PinkNoise, BrownNoise, Constant};
-use auxide_dsp::nodes::filters::{SvfFilter, LadderFilter, AllpassFilter, SvfMode};
-use auxide_dsp::nodes::envelopes::AdsrEnvelope;
-use auxide_dsp::nodes::fx::{Delay, SimpleReverb, Tremolo};
 use auxide_dsp::nodes::dynamics::Compressor;
-use auxide_dsp::nodes::shapers::{WaveShaper, Overdrive};
-use auxide_dsp::nodes::utility::{RingMod, StereoPanner, RMSMeter};
+use auxide_dsp::nodes::envelopes::AdsrEnvelope;
+use auxide_dsp::nodes::filters::{AllpassFilter, LadderFilter, SvfFilter, SvfMode};
+use auxide_dsp::nodes::fx::{Delay, SimpleReverb, Tremolo};
 use auxide_dsp::nodes::lfo::Lfo;
+use auxide_dsp::nodes::oscillators::{
+    BrownNoise, Constant, PinkNoise, SawOsc, SquareOsc, SuperSaw, TriangleOsc,
+};
+use auxide_dsp::nodes::shapers::{Overdrive, WaveShaper};
+use auxide_dsp::nodes::utility::{RMSMeter, RingMod, StereoPanner};
 use std::io::{self, Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,72 +25,106 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Oscillators
     let saw_id = graph.add_external_node(SawOsc { freq: 220.0 });
-    let square_id = graph.add_external_node(SquareOsc { freq: 110.0, pulse_width: 0.5 });
+    let square_id = graph.add_external_node(SquareOsc {
+        freq: 110.0,
+        pulse_width: 0.5,
+    });
     let triangle_id = graph.add_external_node(TriangleOsc { freq: 165.0 });
-    let supersaw_id = graph.add_external_node(SuperSaw { freq: 110.0, detune: 0.1, voices: 7 });
+    let supersaw_id = graph.add_external_node(SuperSaw {
+        freq: 110.0,
+        detune: 0.1,
+        voices: 7,
+    });
     let pink_noise_id = graph.add_external_node(PinkNoise);
     let brown_noise_id = graph.add_external_node(BrownNoise);
     let constant_id = graph.add_external_node(Constant { value: 0.1 });
 
-    node_ids.extend_from_slice(&[saw_id, square_id, triangle_id, supersaw_id, pink_noise_id, brown_noise_id, constant_id]);
+    node_ids.extend_from_slice(&[
+        saw_id,
+        square_id,
+        triangle_id,
+        supersaw_id,
+        pink_noise_id,
+        brown_noise_id,
+        constant_id,
+    ]);
 
     // Filters
     let svf_lp_id = graph.add_external_node(SvfFilter {
-        cutoff: 1000.0, resonance: 0.5, mode: SvfMode::Lowpass,
+        cutoff: 1000.0,
+        resonance: 0.5,
+        mode: SvfMode::Lowpass,
     });
     let svf_hp_id = graph.add_external_node(SvfFilter {
-        cutoff: 200.0, resonance: 0.3, mode: SvfMode::Highpass,
+        cutoff: 200.0,
+        resonance: 0.3,
+        mode: SvfMode::Highpass,
     });
     let ladder_id = graph.add_external_node(LadderFilter {
-        cutoff: 800.0, resonance: 0.3, drive: 1.0,
+        cutoff: 800.0,
+        resonance: 0.3,
+        drive: 1.0,
     });
     let allpass_id = graph.add_external_node(AllpassFilter {
-        delay_samples: 441, gain: 0.5,
+        delay_samples: 441,
+        gain: 0.5,
     });
 
     node_ids.extend_from_slice(&[svf_lp_id, svf_hp_id, ladder_id, allpass_id]);
 
     // Envelopes
     let adsr_id = graph.add_external_node(AdsrEnvelope {
-        attack_ms: 100.0, decay_ms: 200.0, sustain_level: 0.7, release_ms: 500.0, curve: 1.0,
+        attack_ms: 100.0,
+        decay_ms: 200.0,
+        sustain_level: 0.7,
+        release_ms: 500.0,
+        curve: 1.0,
     });
 
     node_ids.push(adsr_id);
 
     // Effects
     let delay_id = graph.add_external_node(Delay {
-        delay_ms: 300.0, feedback: 0.3, mix: 0.2,
+        delay_ms: 300.0,
+        feedback: 0.3,
+        mix: 0.2,
     });
     let reverb_id = graph.add_external_node(SimpleReverb {
-        decay: 0.5, mix: 0.3,
+        decay: 0.5,
+        mix: 0.3,
     });
     let tremolo_id = graph.add_external_node(Tremolo {
-        rate: 5.0, depth: 0.5,
+        rate: 5.0,
+        depth: 0.5,
     });
 
     node_ids.extend_from_slice(&[delay_id, reverb_id, tremolo_id]);
 
     // Dynamics
     let compressor_id = graph.add_external_node(Compressor {
-        threshold: -12.0, ratio: 4.0, attack_ms: 10.0, release_ms: 100.0, makeup_gain: 0.0,
+        threshold: -12.0,
+        ratio: 4.0,
+        attack_ms: 10.0,
+        release_ms: 100.0,
+        makeup_gain: 0.0,
     });
 
     node_ids.push(compressor_id);
 
     // Shapers
     let waveshaper_id = graph.add_external_node(WaveShaper {
-        drive: 2.0, mix: 0.5,
+        drive: 2.0,
+        mix: 0.5,
     });
     let overdrive_id = graph.add_external_node(Overdrive {
-        drive: 3.0, mix: 0.6,
+        drive: 3.0,
+        mix: 0.6,
     });
 
     node_ids.extend_from_slice(&[waveshaper_id, overdrive_id]);
 
     // Utility
-    let ringmod_id = graph.add_external_node(RingMod {
-        mix: 0.5,
-    });
+    let ringmod_id = graph.add_external_node(RingMod { mix: 0.5 });
     let panner_id = graph.add_external_node(StereoPanner { pan: 0.0 });
     let rms_id = graph.add_external_node(RMSMeter { window_size: 1024 });
 
@@ -96,7 +132,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Modulators
     let lfo_id = graph.add_external_node(Lfo {
-        frequency: 1.0, waveform: auxide_dsp::nodes::lfo::LfoWaveform::Sine, amplitude: 1.0, offset: 0.0,
+        frequency: 1.0,
+        waveform: auxide_dsp::nodes::lfo::LfoWaveform::Sine,
+        amplitude: 1.0,
+        offset: 0.0,
     });
 
     node_ids.push(lfo_id);
@@ -186,16 +225,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n🎵 Demo ended. Thanks for exploring Auxide-DSP!");
-    println!("All {} DSP nodes are working together in this comprehensive toolkit.", node_ids.len());
+    println!(
+        "All {} DSP nodes are working together in this comprehensive toolkit.",
+        node_ids.len()
+    );
     Ok(())
 }
 
 fn print_menu(graph: &Graph, current_node: NodeId, param_index: usize, node_ids: &[NodeId]) {
     println!("\n{:=^60}", "");
-    println!("🎛️  NODE {} of {}: {:?}",
-             node_ids.iter().position(|&id| id == current_node).unwrap() + 1,
-             node_ids.len(),
-             current_node);
+    println!(
+        "🎛️  NODE {} of {}: {:?}",
+        node_ids.iter().position(|&id| id == current_node).unwrap() + 1,
+        node_ids.len(),
+        current_node
+    );
 
     // Print current node type (simplified for demo)
     if let Some(node_data) = graph.nodes.get(current_node.0) {
@@ -224,7 +268,9 @@ fn print_menu(graph: &Graph, current_node: NodeId, param_index: usize, node_ids:
     println!("  Envelopes: ADSR");
     println!("  Effects: Delay, Chorus, Flanger, Phaser, Reverb, Tremolo");
     println!("  Dynamics: Compressor, Limiter, Noise Gate");
-    println!("  Shapers: Wave Shaper, Hard Clip, Bit Crusher, Soft Clip, Tube Saturation, Overdrive");
+    println!(
+        "  Shapers: Wave Shaper, Hard Clip, Bit Crusher, Soft Clip, Tube Saturation, Overdrive"
+    );
     println!("  Utility: Ring Mod, Stereo Panner, RMS Meter, Mid-Side Processor");
     println!("  Modulators: LFO, Ring Modulator");
     println!("  Pitch: Pitch Shifter, Harmonizer");

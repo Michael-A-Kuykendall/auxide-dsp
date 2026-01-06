@@ -17,15 +17,27 @@ impl NodeDef for WaveShaper {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // drive_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // drive_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -50,7 +62,12 @@ impl NodeDef for WaveShaper {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let drive = self.drive + if drive_mod.is_empty() { 0.0 } else { drive_mod[i] };
+            let drive = self.drive
+                + if drive_mod.is_empty() {
+                    0.0
+                } else {
+                    drive_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let shaped = (input[i] * drive).tanh();
@@ -75,15 +92,27 @@ impl NodeDef for HardClip {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // threshold_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // threshold_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -108,7 +137,12 @@ impl NodeDef for HardClip {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let threshold = self.threshold + if threshold_mod.is_empty() { 0.0 } else { threshold_mod[i] };
+            let threshold = self.threshold
+                + if threshold_mod.is_empty() {
+                    0.0
+                } else {
+                    threshold_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let shaped = input[i].clamp(-threshold, threshold);
@@ -133,15 +167,27 @@ impl NodeDef for BitCrusher {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // bits_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // bits_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -166,7 +212,12 @@ impl NodeDef for BitCrusher {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let bits = self.bits + if bits_mod.is_empty() { 0.0 } else { bits_mod[i] };
+            let bits = self.bits
+                + if bits_mod.is_empty() {
+                    0.0
+                } else {
+                    bits_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let steps = 2.0_f32.powf(bits);
@@ -192,15 +243,27 @@ impl NodeDef for SoftClip {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // drive_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // drive_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -225,7 +288,12 @@ impl NodeDef for SoftClip {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let drive = self.drive + if drive_mod.is_empty() { 0.0 } else { drive_mod[i] };
+            let drive = self.drive
+                + if drive_mod.is_empty() {
+                    0.0
+                } else {
+                    drive_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let x = input[i] * drive;
@@ -256,16 +324,31 @@ impl NodeDef for TubeSaturation {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // drive_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // asymmetry_mod
-            Port { id: PortId(3), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // drive_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // asymmetry_mod
+            Port {
+                id: PortId(3),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -291,8 +374,18 @@ impl NodeDef for TubeSaturation {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let drive = self.drive + if drive_mod.is_empty() { 0.0 } else { drive_mod[i] };
-            let asymmetry = self.asymmetry + if asymmetry_mod.is_empty() { 0.0 } else { asymmetry_mod[i] };
+            let drive = self.drive
+                + if drive_mod.is_empty() {
+                    0.0
+                } else {
+                    drive_mod[i]
+                };
+            let asymmetry = self.asymmetry
+                + if asymmetry_mod.is_empty() {
+                    0.0
+                } else {
+                    asymmetry_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let x = input[i] * drive;
@@ -323,12 +416,18 @@ impl NodeDef for DcBlocker {
     type State = DcBlockerState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -378,15 +477,27 @@ impl NodeDef for Overdrive {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // drive_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // drive_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -411,7 +522,12 @@ impl NodeDef for Overdrive {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let drive = self.drive + if drive_mod.is_empty() { 0.0 } else { drive_mod[i] };
+            let drive = self.drive
+                + if drive_mod.is_empty() {
+                    0.0
+                } else {
+                    drive_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let x = input[i] * drive;

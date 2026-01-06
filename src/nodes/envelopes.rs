@@ -34,13 +34,19 @@ impl NodeDef for AdsrEnvelope {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // gate
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // gate
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -170,13 +176,19 @@ impl NodeDef for ArEnvelope {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // gate
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // gate
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -281,13 +293,19 @@ impl NodeDef for AdEnvelope {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // gate
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // gate
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 

@@ -16,15 +16,27 @@ impl NodeDef for RingMod {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -50,7 +62,11 @@ impl NodeDef for RingMod {
 
         for i in 0..input.len() {
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
-            let mod_val = if mod_signal.is_empty() { 1.0 } else { mod_signal[i] };
+            let mod_val = if mod_signal.is_empty() {
+                1.0
+            } else {
+                mod_signal[i]
+            };
             let ring = input[i] * mod_val;
             output[i] = input[i] * (1.0 - mix) + ring * mix;
         }
@@ -72,15 +88,27 @@ impl NodeDef for Crossfader {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // A
-            Port { id: PortId(1), rate: Rate::Audio }, // B
-            Port { id: PortId(2), rate: Rate::Audio }, // position_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // A
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // B
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // position_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -128,17 +156,32 @@ impl NodeDef for StereoWidth {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // L
-            Port { id: PortId(1), rate: Rate::Audio }, // R
-            Port { id: PortId(2), rate: Rate::Audio }, // width_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // L
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // R
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // width_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // L
-            Port { id: PortId(1), rate: Rate::Audio }, // R
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // L
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // R
         ];
         PORTS
     }
@@ -163,7 +206,12 @@ impl NodeDef for StereoWidth {
         let width_mod = if inputs.len() > 2 { inputs[2] } else { &[] };
 
         for i in 0..l.len() {
-            let width = self.width + if width_mod.is_empty() { 0.0 } else { width_mod[i] };
+            let width = self.width
+                + if width_mod.is_empty() {
+                    0.0
+                } else {
+                    width_mod[i]
+                };
             let mid = (l[i] + r[i]) * 0.5;
             let side = (l[i] - r[i]) * 0.5 * width;
             outputs[0][i] = mid + side;
@@ -188,12 +236,18 @@ impl NodeDef for ParamSmoother {
     type State = ParamSmootherState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }]; // input param
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]; // input param
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -237,16 +291,28 @@ impl NodeDef for MidSideProcessor {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // left
-            Port { id: PortId(1), rate: Rate::Audio }, // right
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // left
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // right
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // mid
-            Port { id: PortId(1), rate: Rate::Audio }, // side
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // mid
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // side
         ];
         PORTS
     }
@@ -293,16 +359,28 @@ impl NodeDef for StereoPanner {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // mono input
-            Port { id: PortId(1), rate: Rate::Audio }, // pan_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // mono input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // pan_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // left
-            Port { id: PortId(1), rate: Rate::Audio }, // right
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // left
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // right
         ];
         PORTS
     }
@@ -326,7 +404,8 @@ impl NodeDef for StereoPanner {
         let pan_mod = if inputs.len() > 1 { inputs[1] } else { &[] };
 
         for i in 0..input.len() {
-            let pan = (self.pan + if pan_mod.is_empty() { 0.0 } else { pan_mod[i] }).clamp(-1.0, 1.0);
+            let pan =
+                (self.pan + if pan_mod.is_empty() { 0.0 } else { pan_mod[i] }).clamp(-1.0, 1.0);
             let left_gain = ((pan + 1.0) * 0.5).sqrt(); // equal power panning
             let right_gain = ((1.0 - pan) * 0.5).sqrt();
             outputs[0][i] = input[i] * left_gain;
@@ -351,12 +430,18 @@ impl NodeDef for RMSMeter {
     type State = RMSMeterState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -383,7 +468,7 @@ impl NodeDef for RMSMeter {
             sum_squares += sample * sample;
         }
         let block_rms = (sum_squares / input.len() as f32).sqrt();
-        
+
         // Exponential smoothing
         let alpha = 1.0 / self.window_size as f32;
         state.rms = state.rms * (1.0 - alpha) + block_rms * alpha;

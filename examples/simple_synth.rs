@@ -1,8 +1,8 @@
 use auxide_dsp::builders::SynthBuilder;
-use auxide_dsp::nodes::oscillators::SawOsc;
 use auxide_dsp::nodes::envelopes::AdsrEnvelope;
 use auxide_dsp::nodes::filters::SvfFilter;
 use auxide_dsp::nodes::filters::SvfMode;
+use auxide_dsp::nodes::oscillators::SawOsc;
 
 fn main() {
     // Build a simple synth: SawOsc -> SVF Filter -> ADSR Envelope

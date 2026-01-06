@@ -31,13 +31,19 @@ impl NodeDef for Lfo {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // freq_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // freq_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -60,7 +66,12 @@ impl NodeDef for Lfo {
         let output = &mut outputs[0];
 
         for i in 0..output.len() {
-            let freq = self.frequency + if freq_mod.is_empty() { 0.0 } else { freq_mod[i] };
+            let freq = self.frequency
+                + if freq_mod.is_empty() {
+                    0.0
+                } else {
+                    freq_mod[i]
+                };
             let phase_inc = freq_to_phase_increment(freq, sample_rate);
 
             state.phase = (state.phase + phase_inc).fract();
@@ -77,7 +88,13 @@ impl NodeDef for Lfo {
                     }
                 }
                 LfoWaveform::Saw => state.phase * 2.0 - 1.0,
-                LfoWaveform::Square => if state.phase < 0.5 { 1.0 } else { -1.0 },
+                LfoWaveform::Square => {
+                    if state.phase < 0.5 {
+                        1.0
+                    } else {
+                        -1.0
+                    }
+                }
                 LfoWaveform::Random => {
                     // Simple pseudo-random: use phase as seed
                     ((state.phase * 12345.0).sin() - 0.5) * 2.0

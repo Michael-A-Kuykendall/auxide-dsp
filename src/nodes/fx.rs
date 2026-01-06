@@ -23,15 +23,27 @@ impl NodeDef for Delay {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // feedback_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // feedback_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -62,7 +74,12 @@ impl NodeDef for Delay {
         let delay_samples = state.buffer.len();
 
         for i in 0..input.len() {
-            let feedback = self.feedback + if feedback_mod.is_empty() { 0.0 } else { feedback_mod[i] };
+            let feedback = self.feedback
+                + if feedback_mod.is_empty() {
+                    0.0
+                } else {
+                    feedback_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let delayed = state.buffer[state.index];
@@ -97,15 +114,27 @@ impl NodeDef for Chorus {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // rate_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // rate_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -138,7 +167,12 @@ impl NodeDef for Chorus {
         let depth_samples = self.depth_ms * sample_rate / 1000.0;
 
         for i in 0..input.len() {
-            let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
+            let rate = self.rate
+                + if rate_mod.is_empty() {
+                    0.0
+                } else {
+                    rate_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let lfo_inc = rate / sample_rate;
@@ -186,16 +220,31 @@ impl NodeDef for Flanger {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // rate_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // feedback_mod
-            Port { id: PortId(3), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // rate_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // feedback_mod
+            Port {
+                id: PortId(3),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -229,8 +278,18 @@ impl NodeDef for Flanger {
         let depth_samples = self.depth_ms * sample_rate / 1000.0;
 
         for i in 0..input.len() {
-            let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
-            let feedback = self.feedback + if feedback_mod.is_empty() { 0.0 } else { feedback_mod[i] };
+            let rate = self.rate
+                + if rate_mod.is_empty() {
+                    0.0
+                } else {
+                    rate_mod[i]
+                };
+            let feedback = self.feedback
+                + if feedback_mod.is_empty() {
+                    0.0
+                } else {
+                    feedback_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let lfo_inc = rate / sample_rate;
@@ -277,15 +336,27 @@ impl NodeDef for Phaser {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // rate_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // rate_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -314,7 +385,12 @@ impl NodeDef for Phaser {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
+            let rate = self.rate
+                + if rate_mod.is_empty() {
+                    0.0
+                } else {
+                    rate_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             let lfo_inc = rate / sample_rate;
@@ -364,14 +440,23 @@ impl NodeDef for SimpleReverb {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -453,15 +538,27 @@ impl NodeDef for MultitapDelay {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // feedback_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // feedback_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -470,7 +567,12 @@ impl NodeDef for MultitapDelay {
     }
 
     fn init_state(&self, sample_rate: f32, _block_size: usize) -> Self::State {
-        let max_delay_samples = self.taps.iter().map(|(ms, _)| (ms * sample_rate / 1000.0) as usize).max().unwrap_or(1);
+        let max_delay_samples = self
+            .taps
+            .iter()
+            .map(|(ms, _)| (ms * sample_rate / 1000.0) as usize)
+            .max()
+            .unwrap_or(1);
         MultitapDelayState {
             buffer: vec![0.0; max_delay_samples],
             index: 0,
@@ -490,7 +592,12 @@ impl NodeDef for MultitapDelay {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let feedback = self.feedback + if feedback_mod.is_empty() { 0.0 } else { feedback_mod[i] };
+            let feedback = self.feedback
+                + if feedback_mod.is_empty() {
+                    0.0
+                } else {
+                    feedback_mod[i]
+                };
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
 
             // Write input + feedback
@@ -538,14 +645,23 @@ impl NodeDef for ConvolutionReverb {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // mix_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // mix_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -556,18 +672,18 @@ impl NodeDef for ConvolutionReverb {
     fn init_state(&self, _sample_rate: f32, block_size: usize) -> Self::State {
         let ir_len = self.ir.len();
         let fft_size = (ir_len + block_size - 1).next_power_of_two();
-        
+
         let mut planner = RealFftPlanner::<f32>::new();
         let forward_fft = planner.plan_fft_forward(fft_size);
         let inverse_fft = planner.plan_fft_inverse(fft_size);
-        
+
         let fft_output_size = fft_size / 2 + 1;
-        
+
         // Pre-compute IR FFT
         let mut ir_padded = vec![0.0; fft_size];
         ir_padded[..ir_len].copy_from_slice(&self.ir);
         let mut ir_fft = vec![Complex::new(0.0, 0.0); fft_output_size];
-        
+
         // Handle FFT failure gracefully - fall back to impulse response (pass-through)
         if forward_fft.process(&mut ir_padded, &mut ir_fft).is_err() {
             // Fallback: impulse response (DC = 1.0, others = 0.0 for pass-through)
@@ -576,7 +692,7 @@ impl NodeDef for ConvolutionReverb {
                 *freq = Complex::new(0.0, 0.0);
             }
         }
-        
+
         ConvolutionReverbState {
             fft_size,
             ir_fft,
@@ -601,51 +717,59 @@ impl NodeDef for ConvolutionReverb {
         let mix_mod = if inputs.len() > 1 { inputs[1] } else { &[] };
         let output = &mut outputs[0];
         let block_size = input.len();
-        
+
         // Copy input to buffer
         for i in 0..block_size {
             state.input_buffer[state.input_pos + i] = input[i];
         }
         state.input_pos += block_size;
-        
+
         // If we have enough samples, process convolution
         if state.input_pos >= state.fft_size {
             // FFT input
-            if state.forward_fft.process(&mut state.input_buffer, &mut state.scratch_fft).is_err() {
+            if state
+                .forward_fft
+                .process(&mut state.input_buffer, &mut state.scratch_fft)
+                .is_err()
+            {
                 // Fail-closed: output silence
                 output[..block_size].fill(0.0);
                 return;
             }
-            
+
             // Multiply with IR FFT
             for j in 0..state.scratch_fft.len() {
                 state.scratch_fft[j] *= state.ir_fft[j];
             }
-            
+
             // Inverse FFT
-            if state.inverse_fft.process(&mut state.scratch_fft, &mut state.output_buffer).is_err() {
+            if state
+                .inverse_fft
+                .process(&mut state.scratch_fft, &mut state.output_buffer)
+                .is_err()
+            {
                 // Fail-closed: output silence
                 output[..block_size].fill(0.0);
                 return;
             }
-            
+
             // Normalize
             let norm = 1.0 / state.fft_size as f32;
             for sample in state.output_buffer.iter_mut().take(state.fft_size) {
                 *sample *= norm;
             }
-            
+
             // Overlap-add to output
             for (i, out_sample) in output.iter_mut().enumerate().take(block_size) {
                 *out_sample = state.output_buffer[i] + state.overlap[i];
             }
-            
+
             // Update overlap
             let overlap_len = state.overlap.len();
             for i in 0..overlap_len {
                 state.overlap[i] = state.output_buffer[i + block_size];
             }
-            
+
             // Shift input buffer
             for i in 0..(state.fft_size - block_size) {
                 state.input_buffer[i] = state.input_buffer[i + block_size];
@@ -655,7 +779,7 @@ impl NodeDef for ConvolutionReverb {
             // Not enough samples, output silence or previous
             output[..block_size].fill(0.0);
         }
-        
+
         // Mix dry/wet
         for i in 0..block_size {
             let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
@@ -682,15 +806,27 @@ impl NodeDef for Tremolo {
 
     fn input_ports(&self) -> &'static [Port] {
         const PORTS: &[Port] = &[
-            Port { id: PortId(0), rate: Rate::Audio }, // input
-            Port { id: PortId(1), rate: Rate::Audio }, // rate_mod
-            Port { id: PortId(2), rate: Rate::Audio }, // depth_mod
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // input
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // rate_mod
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            }, // depth_mod
         ];
         PORTS
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port { id: PortId(0), rate: Rate::Audio }];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -715,14 +851,24 @@ impl NodeDef for Tremolo {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
-            let depth = self.depth + if depth_mod.is_empty() { 0.0 } else { depth_mod[i] };
-            
+            let rate = self.rate
+                + if rate_mod.is_empty() {
+                    0.0
+                } else {
+                    rate_mod[i]
+                };
+            let depth = self.depth
+                + if depth_mod.is_empty() {
+                    0.0
+                } else {
+                    depth_mod[i]
+                };
+
             let modulation = (state.phase * 2.0 * std::f32::consts::PI).sin() * 0.5 + 0.5;
             let gain = 1.0 - depth * (1.0 - modulation);
-            
+
             output[i] = input[i] * gain;
-            
+
             state.phase += rate / sample_rate;
             if state.phase >= 1.0 {
                 state.phase -= 1.0;

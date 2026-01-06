@@ -11,7 +11,10 @@ fn helpers_pure() {
     approx(db_to_linear(0.0), 1.0);
     approx(db_to_linear(-6.0), 0.5012);
     approx(linear_to_db(1.0), 0.0);
-    approx(freq_to_phase_increment(440.0, 44100.0), 2.0 * std::f32::consts::PI * 440.0 / 44100.0);
+    approx(
+        freq_to_phase_increment(440.0, 44100.0),
+        2.0 * std::f32::consts::PI * 440.0 / 44100.0,
+    );
     assert_eq!(ms_to_samples(10.0, 48000.0), 480);
     let coeff = compute_exponential_coefficient(10.0, 48000.0);
     assert!(coeff > 0.0 && coeff < 1.0);
