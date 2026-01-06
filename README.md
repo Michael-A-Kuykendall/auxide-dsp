@@ -1,6 +1,6 @@
 # auxide-dsp
 
-<img src="https://raw.githubusercontent.com/Michael-A-Kuykendall/auxide-dsp/main/assets/auxide-dsp-logo.png" alt="auxide-dsp logo" width="200"/>
+<img src="https://raw.githubusercontent.com/Michael-A-Kuykendall/auxide-dsp/main/assets/auxide-dsp-logo.png" alt="auxide-dsp logo" width="400"/>
 
 [![Crates.io](https://img.shields.io/crates/v/auxide-dsp.svg)](https://crates.io/crates/auxide-dsp)
 [![Documentation](https://docs.rs/auxide-dsp/badge.svg)](https://docs.rs/auxide-dsp)
