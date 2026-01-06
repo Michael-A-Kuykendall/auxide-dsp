@@ -7,10 +7,10 @@
 "tu": "µs",
 "Mtu": "s",
 "tuth": 10,
-"cmd": "C:\\Users\\micha\\repos\\auxide-dsp\\target\\release\\deps\\rt_safety_tests-8b29280394ed82d5.exe --test-threads=1",
-"pid": 41964,
+"cmd": "C:\\Users\\micha\\repos\\target\\debug\\deps\\rt_safety_tests-047f0620a31e67f9.exe --quiet",
+"pid": 44852,
 "tg": 0,
-"te": 10,
+"te": 694,
 "pps": [],
 "ftbl": [
 "[root]"

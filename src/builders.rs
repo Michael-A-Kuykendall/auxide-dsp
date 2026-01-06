@@ -6,6 +6,12 @@ pub struct SynthBuilder {
     graph: Graph,
 }
 
+impl Default for SynthBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SynthBuilder {
     pub fn new() -> Self {
         Self { graph: Graph::new() }
@@ -39,6 +45,12 @@ impl SynthBuilder {
 /// EffectsChainBuilder for building effect chains
 pub struct EffectsChainBuilder {
     graph: Graph,
+}
+
+impl Default for EffectsChainBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl EffectsChainBuilder {

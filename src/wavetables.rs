@@ -29,7 +29,7 @@ pub fn generate_triangle_table(size: usize) -> Vec<f32> {
     (0..size)
         .map(|i| {
             let t = (2.0 * (i as f32) / (size as f32)) - 1.0;
-            2.0 * (t.abs() - 0.5) * -1.0
+            -(2.0 * (t.abs() - 0.5))
         })
         .collect()
 }

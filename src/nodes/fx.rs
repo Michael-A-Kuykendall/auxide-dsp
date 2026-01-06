@@ -135,7 +135,7 @@ impl NodeDef for Chorus {
         let output = &mut outputs[0];
 
         let base_delay_samples = (self.delay_ms * sample_rate / 1000.0) as usize;
-        let depth_samples = (self.depth_ms * sample_rate / 1000.0) as f32;
+        let depth_samples = self.depth_ms * sample_rate / 1000.0;
 
         for i in 0..input.len() {
             let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
@@ -226,7 +226,7 @@ impl NodeDef for Flanger {
         let output = &mut outputs[0];
 
         let base_delay_samples = (self.delay_ms * sample_rate / 1000.0) as usize;
-        let depth_samples = (self.depth_ms * sample_rate / 1000.0) as f32;
+        let depth_samples = self.depth_ms * sample_rate / 1000.0;
 
         for i in 0..input.len() {
             let rate = self.rate + if rate_mod.is_empty() { 0.0 } else { rate_mod[i] };
@@ -323,14 +323,13 @@ impl NodeDef for Phaser {
 
             let freq = 300.0 + lfo * 2000.0; // sweep 300-2300 Hz
             let c = (std::f32::consts::PI * freq / sample_rate).tan();
-            let a1 = (1.0 - c) / (1.0 + c);
-            let b0 = a1;
+            let a1_coeff = (1.0 - c) / (1.0 + c);
+            let b0 = a1_coeff;
             let b1 = 1.0;
             let a0 = 1.0;
-            let a1 = a1;
 
             let x = input[i] + state.y1 * self.feedback;
-            let y = b0 / a0 * x + b1 / a0 * state.x1 - a1 / a0 * state.y1;
+            let y = b0 / a0 * x + b1 / a0 * state.x1 - a1_coeff / a0 * state.y1;
 
             state.x1 = x;
             state.y1 = y;
@@ -568,7 +567,15 @@ impl NodeDef for ConvolutionReverb {
         let mut ir_padded = vec![0.0; fft_size];
         ir_padded[..ir_len].copy_from_slice(&self.ir);
         let mut ir_fft = vec![Complex::new(0.0, 0.0); fft_output_size];
-        forward_fft.process(&mut ir_padded, &mut ir_fft).unwrap();
+        
+        // Handle FFT failure gracefully - fall back to impulse response (pass-through)
+        if forward_fft.process(&mut ir_padded, &mut ir_fft).is_err() {
+            // Fallback: impulse response (DC = 1.0, others = 0.0 for pass-through)
+            ir_fft[0] = Complex::new(1.0, 0.0);
+            for freq in ir_fft.iter_mut().skip(1) {
+                *freq = Complex::new(0.0, 0.0);
+            }
+        }
         
         ConvolutionReverbState {
             fft_size,
@@ -604,7 +611,11 @@ impl NodeDef for ConvolutionReverb {
         // If we have enough samples, process convolution
         if state.input_pos >= state.fft_size {
             // FFT input
-            state.forward_fft.process(&mut state.input_buffer, &mut state.scratch_fft).unwrap();
+            if state.forward_fft.process(&mut state.input_buffer, &mut state.scratch_fft).is_err() {
+                // Fail-closed: output silence
+                output[..block_size].fill(0.0);
+                return;
+            }
             
             // Multiply with IR FFT
             for j in 0..state.scratch_fft.len() {
@@ -612,17 +623,21 @@ impl NodeDef for ConvolutionReverb {
             }
             
             // Inverse FFT
-            state.inverse_fft.process(&mut state.scratch_fft, &mut state.output_buffer).unwrap();
+            if state.inverse_fft.process(&mut state.scratch_fft, &mut state.output_buffer).is_err() {
+                // Fail-closed: output silence
+                output[..block_size].fill(0.0);
+                return;
+            }
             
             // Normalize
             let norm = 1.0 / state.fft_size as f32;
-            for j in 0..state.fft_size {
-                state.output_buffer[j] *= norm;
+            for sample in state.output_buffer.iter_mut().take(state.fft_size) {
+                *sample *= norm;
             }
             
             // Overlap-add to output
-            for i in 0..block_size {
-                output[i] = state.output_buffer[i] + state.overlap[i];
+            for (i, out_sample) in output.iter_mut().enumerate().take(block_size) {
+                *out_sample = state.output_buffer[i] + state.overlap[i];
             }
             
             // Update overlap
@@ -638,9 +653,7 @@ impl NodeDef for ConvolutionReverb {
             state.input_pos -= block_size;
         } else {
             // Not enough samples, output silence or previous
-            for i in 0..block_size {
-                output[i] = 0.0;
-            }
+            output[..block_size].fill(0.0);
         }
         
         // Mix dry/wet

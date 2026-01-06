@@ -52,3 +52,41 @@ fn ad_runs() {
     node.process_block(&mut state, &[&gate], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
 }
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn adsr_envelope_no_panic(attack_ms in 0.1..1000.0f32, decay_ms in 0.1..1000.0f32, sustain_level in 0.0..1.0f32, release_ms in 0.1..1000.0f32, curve in 0.1..10.0f32) {
+            let node = AdsrEnvelope { attack_ms, decay_ms, sustain_level, release_ms, curve };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let gate = vec![1.0; 64]; // Full gate
+            node.process_block(&mut state, &[&gate], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn ar_envelope_no_panic(attack_ms in 0.1..1000.0f32, release_ms in 0.1..1000.0f32, curve in 0.1..10.0f32) {
+            let node = ArEnvelope { attack_ms, release_ms, curve };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let gate = vec![1.0; 64]; // Full gate
+            node.process_block(&mut state, &[&gate], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn ad_envelope_no_panic(attack_ms in 0.1..1000.0f32, decay_ms in 0.1..1000.0f32, curve in 0.1..10.0f32) {
+            let node = AdEnvelope { attack_ms, decay_ms, curve };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let gate = vec![1.0; 64]; // Full gate
+            node.process_block(&mut state, &[&gate], &mut out, 44100.0);
+            // Should not panic
+        }
+    }
+}

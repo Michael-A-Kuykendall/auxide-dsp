@@ -184,10 +184,10 @@ impl NodeDef for LadderFilter {
             let y1 = y2 * t + state.z2;
             let y0 = y1 * t + state.z1;
 
-            state.z1 = y0 * t + state.z1;
-            state.z2 = y1 * t + state.z2;
-            state.z3 = y2 * t + state.z3;
-            state.z4 = y3 * t + state.z4;
+            state.z1 += y0 * t;
+            state.z2 += y1 * t;
+            state.z3 += y2 * t;
+            state.z4 += y3 * t;
 
             output[i] = y4;
         }

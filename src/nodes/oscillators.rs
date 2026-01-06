@@ -414,7 +414,7 @@ impl NodeDef for PinkNoise {
             let white = ((state.rng >> 32) as u32) as f32 / (u32::MAX as f32) * 2.0 - 1.0;
             state.pink[0] = 0.99886 * state.pink[0] + white * 0.0555179;
             state.pink[1] = 0.99332 * state.pink[1] + white * 0.0750759;
-            state.pink[2] = 0.96900 * state.pink[2] + white * 0.1538520;
+            state.pink[2] = 0.96900 * state.pink[2] + white * 0.153_852;
             state.pink[3] = 0.86650 * state.pink[3] + white * 0.3104856;
             state.pink[4] = 0.55000 * state.pink[4] + white * 0.5329522;
             state.pink[5] = -0.7616 * state.pink[5] - white * 0.0168980;

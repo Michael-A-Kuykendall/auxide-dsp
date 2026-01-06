@@ -118,3 +118,65 @@ fn tremolo_runs() {
     node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
 }
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn delay_no_panic(delay_ms in 1.0..1000.0f32, feedback in 0.0..0.99f32, mix in 0.0..1.0f32) {
+            let node = Delay { delay_ms, feedback, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn chorus_no_panic(delay_ms in 1.0..50.0f32, depth_ms in 0.1..10.0f32, rate in 0.1..10.0f32, mix in 0.0..1.0f32) {
+            let node = Chorus { delay_ms, depth_ms, rate, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn flanger_no_panic(delay_ms in 0.1..10.0f32, depth_ms in 0.1..5.0f32, rate in 0.1..10.0f32, feedback in 0.0..0.99f32, mix in 0.0..1.0f32) {
+            let node = Flanger { delay_ms, depth_ms, rate, feedback, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn phaser_no_panic(rate in 0.1..10.0f32, depth in 0.1..1.0f32, feedback in 0.0..0.99f32, mix in 0.0..1.0f32) {
+            let node = Phaser { rate, depth, feedback, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn simple_reverb_no_panic(decay in 0.0..0.99f32, mix in 0.0..1.0f32) {
+            let node = SimpleReverb { decay, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn tremolo_no_panic(rate in 0.1..20.0f32, depth in 0.0..1.0f32) {
+            let node = Tremolo { rate, depth };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+    }
+}

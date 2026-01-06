@@ -9,10 +9,14 @@ repository = "https://github.com/Michael-A-Kuykendall/auxide-dsp"
 keywords = ["audio", "dsp", "synthesis", "real-time", "oscillators"]
 categories = ["multimedia::audio", "api-bindings"]
 
+[features]
+default = []
+
 [dependencies]
-auxide = { path = "../auxide" }
+auxide = { workspace = true }
 realfft = "3.3"
 num-complex = "0.4"
 
 [dev-dependencies]
 dhat = "0.3"
+proptest = "1.0"

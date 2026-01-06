@@ -39,3 +39,29 @@ fn pitch_detector_runs() {
     node.process_block(&mut state, &[&input], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
 }
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn pitch_shifter_no_panic(shift in 0.5..2.0f32, mix in 0.0..1.0f32) {
+            let node = PitchShifter { shift, mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn spectral_gate_no_panic(threshold in 0.0..1.0f32, ratio in 1.0..20.0f32) {
+            let node = SpectralGate { threshold, ratio };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
+            // Should not panic
+        }
+    }
+}

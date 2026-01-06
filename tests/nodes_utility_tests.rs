@@ -78,3 +78,74 @@ fn rms_meter_runs() {
     node.process_block(&mut state, &[&input], &mut out, 44100.0);
     assert!(out[0][0] > 0.0); // RMS should be positive
 }
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn ring_mod_no_panic(mix in 0.0..1.0f32) {
+            let node = RingMod { mix };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let input = [1.0; 64];
+            let mod_signal = [0.5; 64];
+            node.process_block(&mut state, &[&input, &mod_signal], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn crossfader_no_panic(position in 0.0..1.0f32) {
+            let node = Crossfader { position };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let a = [1.0; 64];
+            let b = [0.0; 64];
+            node.process_block(&mut state, &[&a, &b], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn stereo_width_no_panic(width in 0.0..2.0f32) {
+            let node = StereoWidth { width };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64], vec![0.0; 64]];
+            let l = [1.0; 64];
+            let r = [0.5; 64];
+            node.process_block(&mut state, &[&l, &r], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn param_smoother_no_panic(smoothing in 0.0..1.0f32) {
+            let node = ParamSmoother { smoothing };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let input = [1.0; 64];
+            node.process_block(&mut state, &[&input], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn stereo_panner_no_panic(pan in -1.0..1.0f32) {
+            let node = StereoPanner { pan };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64], vec![0.0; 64]];
+            let input = [1.0; 64];
+            node.process_block(&mut state, &[&input], &mut out, 44100.0);
+            // Should not panic
+        }
+
+        #[test]
+        fn rms_meter_no_panic(window_size in 1..1000usize) {
+            let node = RMSMeter { window_size };
+            let mut state = node.init_state(44100.0, 64);
+            let mut out = vec![vec![0.0; 64]];
+            let input = [1.0; 64];
+            node.process_block(&mut state, &[&input], &mut out, 44100.0);
+            // Should not panic
+        }
+    }
+}
