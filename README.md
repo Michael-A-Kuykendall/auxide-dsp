@@ -22,7 +22,7 @@
 
 **[🎯 Become a Sponsor](https://github.com/sponsors/Michael-A-Kuykendall)** | See our amazing [sponsors](https://github.com/Michael-A-Kuykendall/auxide-dsp/blob/main/SPONSORS.md) 🙏
 
-DSP utilities and trait-based nodes for Auxide 0.2. This crate supplies helper functions, wavetable and window generators, and NodeDef-based DSP blocks that plug into the Auxide kernel via `NodeType::External`.
+DSP utilities and trait-based nodes for Auxide 0.3. This crate supplies helper functions, wavetable and window generators, and NodeDef-based DSP blocks that plug into the Auxide kernel via `NodeType::External`.
 
 - **RT-safe**: no allocations in process paths; all buffers preallocated during init.
 - Helpers: dB/linear conversions, phase increments, ms-to-samples, polyblep, interpolation.
@@ -54,8 +54,8 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-auxide = "0.2"
-auxide-dsp = { path = "../auxide-dsp" }
+auxide = "0.3"
+auxide-dsp = "0.2"
 ```
 
 ## Example
