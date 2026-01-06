@@ -4,10 +4,6 @@
 
 [![Crates.io](https://img.shields.io/crates/v/auxide-dsp.svg)](https://crates.io/crates/auxide-dsp)
 [![Documentation](https://docs.rs/auxide-dsp/badge.svg)](https://docs.rs/auxide-dsp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-[![Crates.io](https://img.shields.io/crates/v/auxide-dsp.svg)](https://crates.io/crates/auxide-dsp)
-[![Documentation](https://docs.rs/auxide-dsp/badge.svg)](https://docs.rs/auxide-dsp)
 [![CI](https://github.com/Michael-A-Kuykendall/auxide-dsp/workflows/CI/badge.svg)](https://github.com/Michael-A-Kuykendall/auxide-dsp/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
