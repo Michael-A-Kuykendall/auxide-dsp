@@ -7,12 +7,46 @@
 "tu": "µs",
 "Mtu": "s",
 "tuth": 10,
-"cmd": "C:\\Users\\micha\\repos\\target\\debug\\deps\\rt_safety_tests-047f0620a31e67f9.exe --quiet",
-"pid": 44852,
-"tg": 0,
-"te": 694,
-"pps": [],
+"cmd": "C:\\Users\\micha\\repos\\target\\debug\\deps\\rt_safety_tests-029ab2bf01667bde.exe",
+"pid": 76148,
+"tg": 1224,
+"te": 1227,
+"pps": [
+{
+"tb": 1440,
+"tbk": 80,
+"tl": 287,
+"mb": 32,
+"mbk": 1,
+"gb": 32,
+"gbk": 1,
+"eb": 0,
+"ebk": 0,
+"fs": [
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9,
+10
+]
+}
+],
 "ftbl": [
-"[root]"
+"[root]",
+"0x7ff7a00deeed: alloc::alloc::impl$1::allocate (alloc\\src\\alloc.rs:250:0)",
+"0x7ff7a00d97a0: alloc::raw_vec::RawVecInner<alloc::alloc::Global>::try_allocate_in<alloc::alloc::Global> (src\\raw_vec\\mod.rs:476:0)",
+"0x7ff7a00d98e6: alloc::raw_vec::RawVecInner<alloc::alloc::Global>::with_capacity_in<alloc::alloc::Global> (src\\raw_vec\\mod.rs:422:0)",
+"0x7ff7a00e7b58: alloc::raw_vec::RawVec<ref$<slice2$<f32> >,alloc::alloc::Global>::with_capacity_in (src\\raw_vec\\mod.rs:190:0)",
+"0x7ff7a00e7b58: alloc::vec::Vec<ref$<slice2$<f32> >,alloc::alloc::Global>::with_capacity_in (src\\vec\\mod.rs:847:0)",
+"0x7ff7a00e7b58: alloc::vec::Vec<ref$<slice2$<f32> >,alloc::alloc::Global>::with_capacity (src\\vec\\mod.rs:500:0)",
+"0x7ff7a00e7b58: alloc::vec::spec_from_iter_nested::impl$1::from_iter<ref$<slice2$<f32> >,core::iter::adapters::map::Map<core::slice::iter::Iter<usize>,auxide::rt::impl$0::process_block::closure_env$0> > (src\\vec\\spec_from_iter_nested.rs:54:0)",
+"0x7ff7a00ec341: alloc::vec::spec_from_iter::impl$0::from_iter<ref$<slice2$<f32> >,core::iter::adapters::map::Map<core::slice::iter::Iter<usize>,auxide::rt::impl$0::process_block::closure_env$0> > (src\\vec\\spec_from_iter.rs:34:0)",
+"0x7ff7a00ec1c1: alloc::vec::impl$15::from_iter<ref$<slice2$<f32> >,core::iter::adapters::map::Map<core::slice::iter::Iter<usize>,auxide::rt::impl$0::process_block::closure_env$0> > (src\\vec\\mod.rs:3470:0)",
+"0x7ff7a00ee753: core::iter::traits::iterator::Iterator::collect<core::iter::adapters::map::Map<core::slice::iter::Iter<usize>,auxide::rt::impl$0::process_block::closure_env$0>,alloc::vec::Vec<ref$<slice2$<f32> >,alloc::alloc::Global> > (iter\\traits\\iterator.rs:2027:0)"
 ]
 }

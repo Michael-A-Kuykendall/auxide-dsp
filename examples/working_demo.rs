@@ -4,9 +4,9 @@ use auxide::rt::Runtime;
 use auxide_dsp::nodes::dynamics::Compressor;
 use auxide_dsp::nodes::filters::{SvfFilter, SvfMode};
 use auxide_dsp::nodes::fx::{Delay, SimpleReverb, Tremolo};
-use auxide_dsp::nodes::oscillators::{Constant, SawOsc};
+use auxide_dsp::nodes::oscillators::SawOsc;
 use auxide_dsp::nodes::shapers::{Overdrive, WaveShaper};
-use auxide_dsp::nodes::utility::{RMSMeter, StereoPanner};
+use auxide_dsp::nodes::utility::RMSMeter;
 
 fn main() {
     println!("🎛️  Auxide-DSP Comprehensive Demo");
@@ -102,16 +102,6 @@ fn main() {
     }
 
     // Connect LFO to modulate the tremolo depth
-    // if let Err(e) = graph.add_edge(Edge {
-    //     from_node: lfo_id,
-    //     from_port: PortId(0),
-    //     to_node: tremolo_id,
-    //     to_port: PortId(1), // modulation input
-    //     rate: Rate::Audio,
-    // }) {
-    //     println!("Warning: Could not connect LFO to tremolo: {:?}", e);
-    //     return;
-    // }
 
     println!("✅ Graph built successfully!");
     println!("🎵 Processing audio through the complete DSP chain...\n");

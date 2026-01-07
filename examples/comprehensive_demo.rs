@@ -1,4 +1,4 @@
-use auxide::graph::{Edge, Graph, NodeId, PortId, Rate};
+use auxide::graph::{Graph, NodeId};
 use auxide::plan::Plan;
 use auxide::rt::Runtime;
 use auxide_dsp::nodes::dynamics::Compressor;
@@ -153,25 +153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             e
         });
 
-    let mut runtime = None;
-    if let Ok(rt) = runtime_result {
-        runtime = Some(rt);
-    }
-
-    // Try to compile the plan, but continue with demo even if it fails
-    let runtime_result = Plan::compile(&graph, 512)
-        .map(|plan| Runtime::new(plan, &graph, 44100.0))
-        .map_err(|e| {
-            println!("Note: Plan compilation failed: {:?}", e);
-            println!("This is expected since we have unconnected nodes with required inputs.");
-            println!("Continuing with node browsing demo...\n");
-            e
-        });
-
-    let mut runtime = None;
-    if let Ok(rt) = runtime_result {
-        runtime = Some(rt);
-    }
+    let mut runtime = runtime_result.ok();
 
     // Interactive control loop
     let mut current_node_index = 0;
@@ -232,7 +214,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn print_menu(graph: &Graph, current_node: NodeId, param_index: usize, node_ids: &[NodeId]) {
+fn print_menu(graph: &Graph, current_node: NodeId, _param_index: usize, node_ids: &[NodeId]) {
     println!("\n{:=^60}", "");
     println!(
         "🎛️  NODE {} of {}: {:?}",
@@ -242,15 +224,13 @@ fn print_menu(graph: &Graph, current_node: NodeId, param_index: usize, node_ids:
     );
 
     // Print current node type (simplified for demo)
-    if let Some(node_data) = graph.nodes.get(current_node.0) {
-        if let Some(node_data) = node_data {
-            match &node_data.node_type {
-                auxide::graph::NodeType::External { .. } => {
-                    println!("  📋 External DSP Node (parameters not displayed in this demo)");
-                    println!("  (Real implementation would show actual node parameters)");
-                }
-                _ => println!("  📋 Built-in Auxide Node"),
+    if let Some(Some(node_data)) = graph.nodes.get(current_node.0) {
+        match &node_data.node_type {
+            auxide::graph::NodeType::External { .. } => {
+                println!("  📋 External DSP Node (parameters not displayed in this demo)");
+                println!("  (Real implementation would show actual node parameters)");
             }
+            _ => println!("  📋 Built-in Auxide Node"),
         }
     }
 

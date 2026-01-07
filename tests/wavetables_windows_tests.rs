@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use auxide_dsp::*;
+use std::f32::consts::FRAC_1_SQRT_2;
 
 fn approx(a: f32, b: f32) {
     assert!((a - b).abs() < 1e-4, "{} != {}", a, b);
@@ -9,7 +10,16 @@ fn approx(a: f32, b: f32) {
 #[test]
 fn wavetable_golden() {
     let table = generate_sine_table(8);
-    let expected = [0.0, 0.7071, 1.0, 0.7071, 0.0, -0.7071, -1.0, -0.7071];
+    let expected = [
+        0.0,
+        FRAC_1_SQRT_2,
+        1.0,
+        FRAC_1_SQRT_2,
+        0.0,
+        -FRAC_1_SQRT_2,
+        -1.0,
+        -FRAC_1_SQRT_2,
+    ];
     for (t, e) in table.iter().zip(expected.iter()) {
         approx(*t, *e);
     }

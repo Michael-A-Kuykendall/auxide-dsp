@@ -29,8 +29,10 @@ impl DspNode for SineOsc {
             for sample in output.iter_mut() {
                 *sample = self.state.phase.sin();
                 self.state.phase += step;
-                // Wrap phase to prevent precision loss
-                self.state.phase %= 2.0 * std::f32::consts::PI;
+                // Only wrap phase if it exceeds 2π to prevent precision loss
+                if self.state.phase > 2.0 * std::f32::consts::PI {
+                    self.state.phase %= 2.0 * std::f32::consts::PI;
+                }
             }
         }
         Ok(())
@@ -71,7 +73,10 @@ impl DspNode for SawOsc {
             for sample in output.iter_mut() {
                 *sample = 2.0 * (self.state.phase - self.state.phase.floor()) - 1.0;
                 self.state.phase += step;
-                self.state.phase %= 1.0;
+                // Only wrap phase if it exceeds 1.0 to prevent precision loss
+                if self.state.phase > 1.0 {
+                    self.state.phase %= 1.0;
+                }
             }
         }
         Ok(())
@@ -112,9 +117,18 @@ impl DspNode for SquareOsc {
         let step = self.freq / sample_rate;
         for output in outputs.iter_mut() {
             for sample in output.iter_mut() {
-                *sample = if (self.state.phase % 1.0) < self.duty { 1.0 } else { -1.0 };
+                // Use conditional wrapping instead of modulo for every sample
+                let phase_wrapped = if self.state.phase >= 1.0 {
+                    self.state.phase - self.state.phase.floor()
+                } else {
+                    self.state.phase
+                };
+                *sample = if phase_wrapped < self.duty { 1.0 } else { -1.0 };
                 self.state.phase += step;
-                self.state.phase %= 1.0;
+                // Only wrap phase if it exceeds 1.0 to prevent precision loss
+                if self.state.phase > 1.0 {
+                    self.state.phase %= 1.0;
+                }
             }
         }
         Ok(())
@@ -153,14 +167,22 @@ impl DspNode for TriangleOsc {
         let step = self.freq / sample_rate;
         for output in outputs.iter_mut() {
             for sample in output.iter_mut() {
-                let phase = self.state.phase % 1.0;
-                *sample = if phase < 0.5 {
-                    4.0 * phase - 1.0
+                // Use conditional wrapping instead of modulo for every sample
+                let phase_wrapped = if self.state.phase >= 1.0 {
+                    self.state.phase - self.state.phase.floor()
                 } else {
-                    3.0 - 4.0 * phase
+                    self.state.phase
+                };
+                *sample = if phase_wrapped < 0.5 {
+                    4.0 * phase_wrapped - 1.0
+                } else {
+                    3.0 - 4.0 * phase_wrapped
                 };
                 self.state.phase += step;
-                self.state.phase %= 1.0;
+                // Only wrap phase if it exceeds 1.0 to prevent precision loss
+                if self.state.phase > 1.0 {
+                    self.state.phase %= 1.0;
+                }
             }
         }
         Ok(())
