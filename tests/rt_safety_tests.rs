@@ -531,7 +531,7 @@ fn test_all_nodes_rt_safe() {
     // - Code inspection: All DSP nodes pre-allocate in init_state()
     // - No Vec, Box, String, or heap allocations in process() methods
     // - Process block only calls stack-allocated arrays and mutable slices
-    
+
     let _profiler = dhat::Profiler::new_heap();
 
     // Run multiple iterations to warm up any caches and ensure steady-state behavior
@@ -568,7 +568,7 @@ fn test_all_nodes_rt_safe() {
     }
 
     let stats = dhat::HeapStats::get();
-    
+
     // NOTE: Known issue with dhat profiling:
     // The profiler captures ~80-90 allocations even though process_block is RT-safe.
     // This is due to profiler initialization overhead, not actual RT violations.
