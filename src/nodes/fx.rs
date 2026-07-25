@@ -919,6 +919,33 @@ impl NodeDef for ConvolutionReverb {
     }
 }
 
+/// Load an impulse response from a WAV file for use with [`ConvolutionReverb`].
+///
+/// Reads the first channel (mono). For multi-channel files the left channel is
+/// taken. Samples are normalized to `[-1, 1]`.
+pub fn load_ir_wav(path: &str) -> Result<Vec<f32>, String> {
+    let mut reader = hound::WavReader::open(path).map_err(|e| e.to_string())?;
+    let channels = reader.spec().channels as usize;
+    let mut ir = Vec::new();
+    for (i, sample) in reader.samples::<i16>().enumerate() {
+        let s = sample.map_err(|e| e.to_string())?;
+        if i.is_multiple_of(channels) {
+            ir.push(s as f32 / i16::MAX as f32);
+        }
+    }
+    Ok(ir)
+}
+
+impl ConvolutionReverb {
+    /// Build a convolution reverb from a WAV impulse-response file.
+    pub fn from_wav(path: &str, mix: f32) -> Result<Self, String> {
+        Ok(Self {
+            ir: load_ir_wav(path)?,
+            mix,
+        })
+    }
+}
+
 /// State of a Tremolo
 #[derive(Debug, Clone)]
 pub struct TremoloState {

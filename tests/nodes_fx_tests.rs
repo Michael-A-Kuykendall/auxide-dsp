@@ -135,6 +135,33 @@ fn stereo_reverb_produces_two_channels() {
     assert!(non_silent(&out[1]), "right channel must be non-silent");
 }
 
+#[test]
+fn ir_loader_loads_wav_into_convolution_reverb() {
+    let path = std::env::temp_dir().join("auxide_dsp_test_ir.wav");
+    let spec = hound::WavSpec {
+        channels: 1,
+        sample_rate: 44100,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+    {
+        let mut writer = hound::WavWriter::create(&path, spec).unwrap();
+        for n in 0..1000u32 {
+            let v = (((n as f32 / 1000.0) * 2.0 - 1.0) * 1000.0) as i16;
+            writer.write_sample(v).unwrap();
+        }
+        writer.finalize().unwrap();
+    }
+    let node = ConvolutionReverb::from_wav(path.to_str().unwrap(), 0.5)
+        .expect("IR WAV should load into ConvolutionReverb");
+    assert_eq!(node.ir.len(), 1000, "IR length should match WAV samples");
+    assert!(
+        node.ir.iter().any(|v| v.abs() > 0.0),
+        "loaded IR should be non-silent"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
 #[cfg(test)]
 mod property_tests {
     use super::*;

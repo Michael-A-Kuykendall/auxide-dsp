@@ -16,6 +16,7 @@ default = []
 auxide = { path = "../auxide" }
 realfft = "3.3"
 num-complex = "0.4"
+hound = "3.5"
 
 [dev-dependencies]
 proptest = "1.0"
