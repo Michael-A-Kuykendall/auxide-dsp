@@ -18,5 +18,4 @@ realfft = "3.3"
 num-complex = "0.4"
 
 [dev-dependencies]
-dhat = "0.3"
 proptest = "1.0"

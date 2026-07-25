@@ -1,13 +1,15 @@
 //! RT Safety Tests
 //!
-//! These tests verify that DSP nodes do not allocate during process_block.
+//! These tests verify that DSP nodes do not allocate during `process_block`.
 //!
-//! IMPORTANT: dhat can only have ONE profiler per process, so we use a single
-//! test that runs all checks sequentially. Run with: cargo test --test rt_safety_tests
-//!
-//! NOTE: This test covers a curated set of critical node types (oscillators, filters,
-//! effects, envelopes, dynamics). It does not exhaustively test every node variant.
-//! The coverage here represents the most commonly used RT-critical paths.
+//! We use a custom global allocator that counts heap allocations only while a
+//! `TRACKING` flag is set, so the count during the RT phase reflects *exactly*
+//! the allocations performed by `process_block` (no profiler/setup overhead).
+//! Setup is performed with tracking disabled, then tracking is enabled and the
+//! RT phase must perform zero allocations.
+
+use std::alloc::{GlobalAlloc, Layout, System as SystemAlloc};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use auxide::graph::{Graph, NodeType, PortId, Rate};
 use auxide::plan::Plan;
@@ -26,17 +28,39 @@ use auxide_dsp::nodes::shapers::WaveShaper;
 use auxide_dsp::nodes::utility::RingMod;
 use auxide_dsp::SvfMode;
 
+/// When `true`, every heap allocation is counted. Disabled during setup so the
+/// RT-phase count reflects only `process_block` activity.
+static TRACKING: AtomicBool = AtomicBool::new(false);
+/// Number of allocations made while `TRACKING` was `true`.
+static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+struct CountingAlloc;
+
+unsafe impl GlobalAlloc for CountingAlloc {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        if TRACKING.load(Ordering::SeqCst) {
+            ALLOC_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+        SystemAlloc.alloc(layout)
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        SystemAlloc.dealloc(ptr, layout);
+    }
+}
+
 #[global_allocator]
-static ALLOC: dhat::Alloc = dhat::Alloc;
+static ALLOC: CountingAlloc = CountingAlloc;
 
 /// Single comprehensive RT allocation test for ALL DSP node types
 ///
 /// Tests ALL DSP nodes for RT safety by:
-/// 1. Setting up graphs and runtimes for all node types BEFORE starting the profiler
-/// 2. Running multiple process_block calls while profiling
-/// 3. Verifying zero allocations occurred during processing
+/// 1. Setting up graphs and runtimes for all node types BEFORE enabling tracking
+/// 2. Running multiple `process_block` calls while tracking allocations
+/// 3. Asserting that *exactly zero* allocations occurred during processing
 ///
-/// Nodes tested: ALL NodeDef implementations (oscillators, filters, envelopes, dynamics, lfo, fx, shapers, pitch, utility)
+/// Nodes tested: ALL `NodeDef` implementations (oscillators, filters, envelopes,
+/// dynamics, lfo, fx, shapers, pitch, utility)
 #[test]
 fn test_all_nodes_rt_safe() {
     // ========== SETUP PHASE (allocations allowed) ==========
@@ -522,17 +546,10 @@ fn test_all_nodes_rt_safe() {
     runtime_ringmod.process_block(&mut out_ringmod).unwrap();
 
     // ========== RT PHASE (zero allocations required) ==========
-    // WARNING: dhat profiling can show false positives due to:
-    // 1. Profiler initialization overhead (one-time setup)
-    // 2. Assertion panic allocations (when test fails)
-    // 3. Platform/allocator variations
-    //
-    // Actual RT safety is verified by:
-    // - Code inspection: All DSP nodes pre-allocate in init_state()
-    // - No Vec, Box, String, or heap allocations in process() methods
-    // - Process block only calls stack-allocated arrays and mutable slices
-
-    let _profiler = dhat::Profiler::new_heap();
+    // Tracking is enabled only now, and the counter is reset, so any allocation
+    // counted below is attributable solely to `process_block` invocations.
+    ALLOC_COUNT.store(0, Ordering::SeqCst);
+    TRACKING.store(true, Ordering::SeqCst);
 
     // Run multiple iterations to warm up any caches and ensure steady-state behavior
     for _ in 0..10 {
@@ -567,19 +584,12 @@ fn test_all_nodes_rt_safe() {
         runtime_ringmod.process_block(&mut out_ringmod).unwrap();
     }
 
-    let stats = dhat::HeapStats::get();
+    TRACKING.store(false, Ordering::SeqCst);
+    let total = ALLOC_COUNT.load(Ordering::SeqCst);
 
-    // NOTE: Known issue with dhat profiling:
-    // The profiler captures ~80-90 allocations even though process_block is RT-safe.
-    // This is due to profiler initialization overhead, not actual RT violations.
-    // This has been verified through code inspection: all DSP nodes use stack arrays
-    // and pre-allocated state buffers during process_block.
-    //
-    // TODO: Replace with proper in-process profiling that avoids dhat overhead
-    if stats.total_blocks > 100 {
-        panic!(
-            "RT violation: {} allocations detected. Process block should be allocation-free.",
-            stats.total_blocks
-        );
-    }
+    assert_eq!(
+        total, 0,
+        "RT violation: {total} allocations detected during process_block. \
+         DSP nodes must not allocate on the audio thread."
+    );
 }

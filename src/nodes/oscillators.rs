@@ -719,15 +719,15 @@ mod tests {
         };
         let mut best = 0usize;
         let mut best_e = 0.0f32;
-        for b in 1..spec.len() {
+        for (b, &e) in spec.iter().enumerate().skip(1) {
             if (b as isize - fund_bin as isize).abs() <= 3 {
                 continue;
             }
             if is_harmonic(b) {
                 continue;
             }
-            if spec[b] > best_e {
-                best_e = spec[b];
+            if e > best_e {
+                best_e = e;
                 best = b;
             }
         }
