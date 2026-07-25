@@ -195,6 +195,61 @@ fn adsr_reaches_peak_then_sustain_then_decays() {
     );
 }
 
+#[test]
+fn adsr_golden_linear_reference_shape() {
+    // Golden reference for the LINEAR (curve = 0) ADSR: the shape must hit the
+    // analytically exact levels, not merely "be non-silent".
+    let sr = 44100.0;
+    let node = AdsrEnvelope {
+        attack_ms: 10.0,
+        decay_ms: 0.0,
+        sustain_level: 0.5,
+        release_ms: 10.0,
+        curve: 0.0,
+    };
+    let mut state = node.init_state(sr, 1);
+
+    // Gate on ONCE, then let the envelope advance sample by sample.
+    node.gate(&mut state, true);
+    // Attack (10 ms ≈ 441 samples) must reach exactly 1.0 (linear ramp).
+    let attack_samples = (10.0 / 1000.0 * sr) as usize;
+    let mut peak = 0.0f32;
+    for _ in 0..attack_samples {
+        let mut out = vec![vec![0.0; 1]];
+        node.process_block(&mut state, &[], &mut out, sr);
+        peak = peak.max(out[0][0]);
+    }
+    assert!(
+        (peak - 1.0).abs() < 1e-3,
+        "linear attack peak must reach 1.0, got {peak}"
+    );
+
+    // Sustain must hold at 0.5.
+    let mut sustain = 0.0f32;
+    for _ in 0..((5.0 / 1000.0 * sr) as usize) {
+        let mut out = vec![vec![0.0; 1]];
+        node.process_block(&mut state, &[], &mut out, sr);
+        sustain = out[0][0];
+    }
+    assert!(
+        (sustain - 0.5).abs() < 1e-3,
+        "sustain must hold 0.5, got {sustain}"
+    );
+
+    // Release (gate off once) must decay back to ~0 within the 10 ms tail.
+    node.gate(&mut state, false);
+    let mut after = 1.0f32;
+    for _ in 0..((20.0 / 1000.0 * sr) as usize) {
+        let mut out = vec![vec![0.0; 1]];
+        node.process_block(&mut state, &[], &mut out, sr);
+        after = out[0][0];
+    }
+    assert!(
+        after.abs() < 1e-3,
+        "level after release tail must be ~0, got {after}"
+    );
+}
+
 #[cfg(test)]
 mod property_tests {
     use super::*;
