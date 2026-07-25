@@ -630,7 +630,9 @@ impl NodeDef for Constant {
         outputs: &mut [Vec<f32>],
         _sample_rate: f32,
     ) {
-        let output = &mut outputs[0];
+        let Some(output) = outputs.get_mut(0) else {
+            return;
+        };
         for sample in output.iter_mut() {
             *sample = self.value;
         }
@@ -682,43 +684,6 @@ mod tests {
         let lo = bin.saturating_sub(half);
         let hi = (bin + half).min(spec.len() - 1);
         spec[lo..=hi].iter().copied().sum()
-    }
-
-    /// Naive (non-band-limited) triangle reference: true ideal triangle shape sampled directly.
-    fn naive_triangle(freq: f32, sr: f32, seconds: f32) -> Vec<f32> {
-        let n = (sr * seconds) as usize;
-        let inc = freq / sr;
-        let mut phase = 0.0f32;
-        let mut v = vec![0.0f32; n];
-        for s in v.iter_mut() {
-            *s = if phase < 0.5 {
-                4.0 * phase - 1.0
-            } else {
-                3.0 - 4.0 * phase
-            };
-            phase += inc;
-            if phase >= 1.0 {
-                phase -= 1.0;
-            }
-        }
-        v
-    }
-
-    /// Naive (non-band-limited) pulse reference sampled directly.
-    fn naive_pulse(freq: f32, pw: f32, sr: f32, seconds: f32) -> Vec<f32> {
-        let n = (sr * seconds) as usize;
-        let inc = freq / sr;
-        let pw = pw.clamp(0.01, 0.99);
-        let mut phase = 0.0f32;
-        let mut v = vec![0.0f32; n];
-        for s in v.iter_mut() {
-            *s = if phase < pw { 1.0 } else { -1.0 };
-            phase += inc;
-            if phase >= 1.0 {
-                phase -= 1.0;
-            }
-        }
-        v
     }
 
     /// Naive (truncating) wavetable reference: the `table[floor(phase*len)]` behaviour.

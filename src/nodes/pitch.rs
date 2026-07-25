@@ -95,82 +95,9 @@ impl NodeDef for PitchShifter {
     }
 }
 
-/// State of a Spectral Gate
-#[derive(Debug, Clone)]
-pub struct SpectralGateState {
-    pub envelope: f32,
-}
-
-/// Spectral Gate (simple noise gate)
-#[derive(Debug, Clone)]
-pub struct SpectralGate {
-    pub threshold: f32,
-    pub ratio: f32,
-}
-
-impl NodeDef for SpectralGate {
-    type State = SpectralGateState;
-
-    fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port {
-            id: PortId(0),
-            rate: Rate::Audio,
-        }];
-        PORTS
-    }
-
-    fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port {
-            id: PortId(0),
-            rate: Rate::Audio,
-        }];
-        PORTS
-    }
-
-    fn required_inputs(&self) -> usize {
-        1
-    }
-
-    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        SpectralGateState { envelope: 0.0 }
-    }
-
-    fn process_block(
-        &self,
-        state: &mut Self::State,
-        inputs: &[&[f32]],
-        outputs: &mut [Vec<f32>],
-        sample_rate: f32,
-    ) {
-        let input = &inputs[0];
-        let output = &mut outputs[0];
-
-        let attack_coeff = (-1.0 / (1.0 * sample_rate / 1000.0)).exp();
-        let release_coeff = (-1.0 / (10.0 * sample_rate / 1000.0)).exp();
-
-        for i in 0..input.len() {
-            let key = input[i].abs();
-            if key > state.envelope {
-                state.envelope = attack_coeff * (state.envelope - key) + key;
-            } else {
-                state.envelope = release_coeff * (state.envelope - key) + key;
-            }
-
-            let gain = if state.envelope < self.threshold {
-                0.0
-            } else {
-                state.envelope
-            };
-            let gain_linear = if state.envelope > 0.0 {
-                gain / state.envelope
-            } else {
-                0.0
-            };
-
-            output[i] = input[i] * gain_linear;
-        }
-    }
-}
+// Note: a time-domain NoiseGate (envelope-following gate) already lives in
+// `crate::dynamics`. The previously misnamed `SpectralGate` here was a duplicate
+// of it and has been removed; use `crate::dynamics::NoiseGate` instead.
 
 /// State of a Pitch Detector
 #[derive(Debug, Clone)]

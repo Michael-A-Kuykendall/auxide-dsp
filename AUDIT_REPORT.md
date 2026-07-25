@@ -109,7 +109,7 @@ let slice = unsafe {
 | Dynamics | Compressor, Limiter, NoiseGate, Expander |
 | Distortion | Waveshaper, SoftClipper, HardClipper, TubeSaturation, Bitcrusher |
 | Utility | DCBlocker, ParameterSmoother, StereoWidth, MidSide, Crossfader, RMSMeter, StereoPanner |
-| Pitch | PitchShifter, PitchDetector, SpectralGate |
+| Pitch | PitchShifter, PitchDetector, NoiseGate |
 | LFO | Sine, Saw, Square, Triangle, Random |
 
 ---

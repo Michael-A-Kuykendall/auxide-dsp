@@ -1,5 +1,5 @@
 use auxide::node::NodeDef;
-use auxide_dsp::{PitchDetector, PitchShifter, SpectralGate};
+use auxide_dsp::{dynamics::NoiseGate, PitchDetector, PitchShifter};
 
 fn non_silent(output: &[f32]) -> bool {
     output.iter().any(|&x| x.abs() > 1e-6)
@@ -18,10 +18,12 @@ fn pitch_shifter_runs() {
 }
 
 #[test]
-fn spectral_gate_runs() {
-    let node = SpectralGate {
+fn noise_gate_runs() {
+    let node = NoiseGate {
         threshold: 0.1,
         ratio: 10.0,
+        attack_ms: 1.0,
+        release_ms: 10.0,
     };
     let mut state = node.init_state(44100.0, 64);
     let mut out = vec![vec![0.0; 64]];
@@ -58,8 +60,8 @@ mod property_tests {
         }
 
         #[test]
-        fn spectral_gate_no_panic(threshold in 0.0..1.0f32, ratio in 1.0..20.0f32) {
-            let node = SpectralGate { threshold, ratio };
+        fn noise_gate_no_panic(threshold in 0.0..1.0f32, ratio in 1.0..20.0f32) {
+            let node = NoiseGate { threshold, ratio, attack_ms: 1.0, release_ms: 10.0 };
             let mut state = node.init_state(44100.0, 64);
             let mut out = vec![vec![0.0; 64]];
             node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);

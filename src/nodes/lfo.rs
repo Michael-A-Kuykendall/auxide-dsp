@@ -63,7 +63,9 @@ impl NodeDef for Lfo {
         sample_rate: f32,
     ) {
         let freq_mod = if inputs.is_empty() { &[] } else { inputs[0] };
-        let output = &mut outputs[0];
+        let Some(output) = outputs.get_mut(0) else {
+            return;
+        };
 
         for i in 0..output.len() {
             let freq = self.frequency
