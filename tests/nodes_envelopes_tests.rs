@@ -146,6 +146,55 @@ fn envelope_gate_live_adsr() {
     assert!(out[0].iter().any(|&v| v > 0.0)); // Attack triggered — non-zero output
 }
 
+#[test]
+fn adsr_reaches_peak_then_sustain_then_decays() {
+    let node = AdsrEnvelope {
+        attack_ms: 10.0,
+        decay_ms: 20.0,
+        sustain_level: 0.5,
+        release_ms: 30.0,
+        curve: 0.0,
+    };
+    let sr = 44100.0;
+    let mut state = node.init_state(sr, 64);
+    let attack_blocks = ((10.0 / 1000.0) * sr / 64.0).ceil() as usize + 1;
+    let decay_blocks = ((20.0 / 1000.0) * sr / 64.0).ceil() as usize + 1;
+
+    let mut peak = 0.0f32;
+    let mut sustain_val = 0.0f32;
+    for b in 0..(attack_blocks + decay_blocks + 3) {
+        let gate = vec![1.0; 64];
+        let mut out = vec![vec![0.0; 64]];
+        node.process_block(&mut state, &[&gate], &mut out, sr);
+        for &v in &out[0] {
+            peak = peak.max(v);
+        }
+        if b == attack_blocks + decay_blocks + 1 {
+            sustain_val = out[0][0];
+        }
+    }
+    assert!(
+        (peak - 1.0).abs() < 0.05,
+        "attack should reach ~1.0, got {peak}"
+    );
+    assert!(
+        (sustain_val - 0.5).abs() < 0.1,
+        "sustain should be ~0.5, got {sustain_val}"
+    );
+
+    let mut finalv = 1.0f32;
+    for _ in 0..60 {
+        let gate = vec![0.0; 64];
+        let mut out = vec![vec![0.0; 64]];
+        node.process_block(&mut state, &[&gate], &mut out, sr);
+        finalv = out[0][0];
+    }
+    assert!(
+        finalv.abs() < 0.05,
+        "release should decay to ~0, got {finalv}"
+    );
+}
+
 #[cfg(test)]
 mod property_tests {
     use super::*;

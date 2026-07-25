@@ -129,6 +129,58 @@ fn allpass_runs() {
     assert!(non_silent(&out[0]));
 }
 
+#[test]
+fn svf_lowpass_passes_dc_and_attenuates_high() {
+    let node = SvfFilter {
+        cutoff: 1000.0,
+        resonance: 0.5,
+        mode: SvfMode::Lowpass,
+    };
+    let dc = vec![1.0; 64];
+    let mut state = node.init_state(44100.0, 64);
+    let mut out = vec![vec![0.0; 64]];
+    // Settle, then measure DC gain.
+    for _ in 0..20 {
+        node.process_block(&mut state, &[&dc], &mut out, 44100.0);
+    }
+    let dc_gain = out[0].iter().map(|v| v.abs()).sum::<f32>() / 64.0;
+    assert!(
+        dc_gain > 0.9,
+        "lowpass must pass DC (gain~1), got {dc_gain}"
+    );
+
+    // 8 kHz sine is well above the 1 kHz cutoff → must be attenuated.
+    let mut state2 = node.init_state(44100.0, 64);
+    let hf_in: Vec<f32> = (0..64)
+        .map(|i| (2.0 * std::f32::consts::PI * 8000.0 * i as f32 / 44100.0).sin())
+        .collect();
+    let mut out2 = vec![vec![0.0; 64]];
+    for _ in 0..20 {
+        node.process_block(&mut state2, &[&hf_in], &mut out2, 44100.0);
+    }
+    let in_rms = (hf_in.iter().map(|v| v * v).sum::<f32>() / 64.0).sqrt();
+    let out_rms = (out2[0].iter().map(|v| v * v).sum::<f32>() / 64.0).sqrt();
+    let ratio = out_rms / in_rms;
+    assert!(ratio < 0.3, "lowpass must attenuate 8 kHz, ratio={ratio}");
+}
+
+#[test]
+fn svf_highpass_blocks_dc() {
+    let node = SvfFilter {
+        cutoff: 1000.0,
+        resonance: 0.5,
+        mode: SvfMode::Highpass,
+    };
+    let dc = vec![1.0; 64];
+    let mut state = node.init_state(44100.0, 64);
+    let mut out = vec![vec![0.0; 64]];
+    for _ in 0..20 {
+        node.process_block(&mut state, &[&dc], &mut out, 44100.0);
+    }
+    let dc_gain = out[0].iter().map(|v| v.abs()).sum::<f32>() / 64.0;
+    assert!(dc_gain < 0.1, "highpass must block DC, got {dc_gain}");
+}
+
 #[cfg(test)]
 mod property_tests {
     use super::*;
