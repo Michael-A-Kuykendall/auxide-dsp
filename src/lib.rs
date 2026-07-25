@@ -5,11 +5,13 @@
 pub mod builders;
 pub mod helpers;
 pub mod nodes;
+pub mod polyphony;
 pub mod wavetables;
 pub mod windows;
 
 pub use builders::*;
 pub use helpers::*;
 pub use nodes::*;
+pub use polyphony::*;
 pub use wavetables::*;
 pub use windows::*;
