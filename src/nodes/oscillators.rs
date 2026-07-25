@@ -612,7 +612,7 @@ impl NodeDef for Constant {
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        PORTS_MONO_OUT
+        &[crate::ports::OUT]
     }
 
     fn required_inputs(&self) -> usize {

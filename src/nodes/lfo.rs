@@ -1,5 +1,5 @@
 use crate::helpers::freq_to_phase_increment;
-use auxide::graph::{Port, PortId, Rate};
+use auxide::graph::Port;
 use auxide::node::NodeDef;
 
 /// State of an LFO
@@ -30,21 +30,11 @@ impl NodeDef for Lfo {
     type State = LfoState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[
-            Port {
-                id: PortId(0),
-                rate: Rate::Audio,
-            }, // freq_mod
-        ];
-        PORTS
+        &[crate::ports::FREQ_MOD]
     }
 
     fn output_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[Port {
-            id: PortId(0),
-            rate: Rate::Audio,
-        }];
-        PORTS
+        &[crate::ports::OUT]
     }
 
     fn required_inputs(&self) -> usize {
