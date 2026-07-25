@@ -24,5 +24,8 @@ pub use shapers::*;
 pub mod pitch;
 pub use pitch::*;
 
+pub mod sampler;
+pub use sampler::*;
+
 pub mod utility;
 pub use utility::*;

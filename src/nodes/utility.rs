@@ -478,3 +478,140 @@ impl NodeDef for RMSMeter {
         }
     }
 }
+
+/// State of a multi-input Mixer (summing bus).
+#[derive(Debug, Clone, Copy)]
+pub struct MixerState;
+
+/// Summing mixer with `inputs` input ports (all summed into one output).
+///
+/// Unlike the kernel `NodeType::Mix` (single input port), this node exposes
+/// many input ports so several voices can be summed without violating the
+/// single-writer rule. Declare up to [`MIXER_MAX_PORTS`] ports; connect as
+/// many as needed.
+#[derive(Debug, Clone)]
+pub struct Mixer {
+    pub inputs: usize,
+}
+
+/// Maximum input ports a [`Mixer`] exposes.
+pub const MIXER_MAX_PORTS: usize = 16;
+
+impl Mixer {
+    /// Create a mixer that accepts up to `inputs` connections.
+    pub fn new(inputs: usize) -> Self {
+        Self {
+            inputs: inputs.clamp(1, MIXER_MAX_PORTS),
+        }
+    }
+}
+
+impl NodeDef for Mixer {
+    type State = MixerState;
+
+    fn input_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(2),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(3),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(4),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(5),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(6),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(7),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(8),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(9),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(10),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(11),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(12),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(13),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(14),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(15),
+                rate: Rate::Audio,
+            },
+        ];
+        &PORTS[..MIXER_MAX_PORTS]
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
+        PORTS
+    }
+
+    fn required_inputs(&self) -> usize {
+        1
+    }
+
+    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
+        MixerState
+    }
+
+    fn process_block(
+        &self,
+        _state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        _sample_rate: f32,
+    ) {
+        let Some(out) = outputs.get_mut(0) else {
+            return;
+        };
+        for sample in out.iter_mut() {
+            *sample = 0.0;
+        }
+        for input in inputs {
+            for (o, &i) in out.iter_mut().zip(input.iter()) {
+                *o += i;
+            }
+        }
+    }
+}
