@@ -1,19 +1,29 @@
+use crate::helpers;
 use auxide::graph::{Port, PortId, Rate};
 use auxide::node::NodeDef;
 
-/// State of a Pitch Shifter
+/// State of a varispeed pitch shifter.
 #[derive(Debug, Clone)]
 pub struct PitchShifterState {
-    pub buffer: Vec<f32>,
-    pub index: usize,
-    pub phase: f32,
+    pub ring: Vec<f32>,
+    pub write_idx: usize,
+    pub read_pos: f32,
 }
 
-/// Pitch Shifter (simple delay-based)
+/// Varispeed pitch shifter (transposition + time-stretch).
+///
+/// The input is written into a ring buffer at the input rate and read back
+/// through a fractional read pointer that advances by
+/// `ratio = 2^(shift/12)` samples per input sample. `ratio > 1`
+/// (positive shift) reads slower -> higher pitch and longer output;
+/// `ratio < 1` reads faster -> lower pitch and shorter output. This
+/// transposes pitch AND stretches time (it is NOT a time-preserving
+/// pitch shifter). The wet signal is mixed with the dry input by
+/// `mix` (0 = dry, 1 = wet).
 #[derive(Debug, Clone)]
 pub struct PitchShifter {
     pub shift: f32, // semitones
-    pub mix: f32,
+    pub mix: f32,   // 0 = dry, 1 = wet
 }
 
 impl NodeDef for PitchShifter {
@@ -50,11 +60,12 @@ impl NodeDef for PitchShifter {
     }
 
     fn init_state(&self, sample_rate: f32, _block_size: usize) -> Self::State {
-        let max_delay = (sample_rate / 50.0) as usize; // up to 20ms
+        // Ring sized for up to ~50 ms of history.
+        let len = (sample_rate * 0.05).max(64.0) as usize;
         PitchShifterState {
-            buffer: vec![0.0; max_delay],
-            index: 0,
-            phase: 0.0,
+            ring: vec![0.0; len],
+            write_idx: 0,
+            read_pos: 0.0,
         }
     }
 
@@ -69,29 +80,37 @@ impl NodeDef for PitchShifter {
         let shift_mod = if inputs.len() > 1 { inputs[1] } else { &[] };
         let mix_mod = if inputs.len() > 2 { inputs[2] } else { &[] };
         let output = &mut outputs[0];
+        let n = input.len();
+        let len = state.ring.len();
 
-        for i in 0..input.len() {
+        for i in 0..n {
             let shift = self.shift
                 + if shift_mod.is_empty() {
                     0.0
                 } else {
                     shift_mod[i]
                 };
-            let mix = self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] };
+            let mix =
+                (self.mix + if mix_mod.is_empty() { 0.0 } else { mix_mod[i] }).clamp(0.0, 1.0);
 
             let ratio = 2.0_f32.powf(shift / 12.0);
-            let delay_samples = (sample_rate / 440.0 / ratio) as usize; // approximate for A4
 
-            let delayed_idx = (state.index + state.buffer.len()
-                - delay_samples.min(state.buffer.len() - 1))
-                % state.buffer.len();
-            let delayed = state.buffer[delayed_idx];
+            // Write current input into the ring at the write head.
+            state.ring[state.write_idx] = input[i];
 
-            output[i] = input[i] * (1.0 - mix) + delayed * mix;
+            // Read the (fractional) varispeed position.
+            let wet = helpers::linear_interpolate(&state.ring, state.read_pos);
 
-            state.buffer[state.index] = input[i];
-            state.index = (state.index + 1) % state.buffer.len();
+            output[i] = input[i] * (1.0 - mix) + wet * mix;
+
+            // Advance the read pointer by the pitch ratio (wraps the ring).
+            state.read_pos += ratio;
+            while state.read_pos >= len as f32 {
+                state.read_pos -= len as f32;
+            }
+            state.write_idx = (state.write_idx + 1) % len;
         }
+        let _ = sample_rate;
     }
 }
 
