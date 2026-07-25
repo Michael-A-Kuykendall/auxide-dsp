@@ -23,8 +23,16 @@ fn effects_chain_builder_runs() {
 }
 
 #[test]
-fn effects_chain_builder_build_fails_without_connections() {
-    let builder = EffectsChainBuilder::new().add_input().add_output();
-    let result = builder.build(64);
-    assert!(result.is_err()); // Fails because no edges
+fn effects_chain_builder_connects_nodes() {
+    // The builder now wires edges automatically, so a chain with an input and
+    // output compiles and actually contains an edge between them.
+    let (graph, _plan) = EffectsChainBuilder::new()
+        .add_input()
+        .add_output()
+        .build(64)
+        .expect("effects chain should build");
+    assert!(
+        !graph.edges.is_empty(),
+        "effects chain must contain at least one edge after build"
+    );
 }
