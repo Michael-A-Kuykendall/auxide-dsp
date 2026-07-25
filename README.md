@@ -29,7 +29,7 @@ DSP utilities and trait-based nodes for Auxide 0.3. This crate supplies helper f
 ## Auxide Ecosystem
 | Crate | Description | Version |
 |-------|-------------|---------|
-| [auxide](https://github.com/Michael-A-Kuykendall/auxide) | Real-time-safe audio graph kernel | 0.2.1 |
+| [auxide](https://github.com/Michael-A-Kuykendall/auxide) | Real-time-safe audio graph kernel | 0.3.1 |
 | **[auxide-dsp](https://github.com/Michael-A-Kuykendall/auxide-dsp)** | DSP nodes library | 0.1.1 |
 | [auxide-io](https://github.com/Michael-A-Kuykendall/auxide-io) | Audio I/O layer | 0.1.2 |
 | [auxide-midi](https://github.com/Michael-A-Kuykendall/auxide-midi) | MIDI integration | 0.1.1 |

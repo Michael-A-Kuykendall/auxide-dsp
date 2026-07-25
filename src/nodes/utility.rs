@@ -1,6 +1,59 @@
 use auxide::graph::{Port, PortId, Rate};
 use auxide::node::NodeDef;
 
+/// Multiply two audio signals sample-wise.
+///
+/// `output[i] = input_a[i] * input_b[i]`
+#[derive(Debug, Clone)]
+pub struct Multiply;
+
+impl NodeDef for Multiply {
+    type State = ();
+
+    fn input_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+        ];
+        PORTS
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
+        PORTS
+    }
+
+    fn required_inputs(&self) -> usize {
+        2
+    }
+
+    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {}
+
+    fn process_block(
+        &self,
+        _state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        _sample_rate: f32,
+    ) {
+        let a = &inputs[0];
+        let b = &inputs[1];
+        let out = &mut outputs[0];
+        for (o, (a_s, b_s)) in out.iter_mut().zip(a.iter().zip(b.iter())) {
+            *o = a_s * b_s;
+        }
+    }
+}
+
 /// State of a Ring Modulator
 #[derive(Debug, Clone)]
 pub struct RingModState;

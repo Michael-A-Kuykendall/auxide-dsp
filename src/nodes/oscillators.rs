@@ -59,10 +59,13 @@ pub struct BrownNoise;
 
 pub struct OscState {
     phase: f32,
+    freq: f32,
 }
 
 pub struct MultiPhaseState {
     phases: Vec<f32>,
+    freq: f32,
+    detune: f32,
 }
 
 pub struct NoiseState {
@@ -93,7 +96,16 @@ impl NodeDef for SawOsc {
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        OscState { phase: 0.0 }
+        OscState {
+            phase: 0.0,
+            freq: self.freq,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == auxide::control::PARAM_FREQUENCY {
+            state.freq = value;
+        }
     }
 
     fn process_block(
@@ -106,11 +118,10 @@ impl NodeDef for SawOsc {
         let Some(out) = outputs.get_mut(0) else {
             return;
         };
-        let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let inc = freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
             *sample = 2.0 * phase - 1.0;
-            // PolyBLEP to reduce aliasing
             *sample -= polyblep(phase, inc);
             state.phase += inc;
             if state.phase >= 1.0 {
@@ -136,7 +147,16 @@ impl NodeDef for SquareOsc {
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        OscState { phase: 0.0 }
+        OscState {
+            phase: 0.0,
+            freq: self.freq,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == auxide::control::PARAM_FREQUENCY {
+            state.freq = value;
+        }
     }
 
     fn process_block(
@@ -150,7 +170,7 @@ impl NodeDef for SquareOsc {
             return;
         };
         let pw = self.pulse_width.clamp(0.01, 0.99);
-        let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let inc = freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
             let base = if phase < pw { 1.0 } else { -1.0 };
@@ -184,7 +204,16 @@ impl NodeDef for TriangleOsc {
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        OscState { phase: 0.0 }
+        OscState {
+            phase: 0.0,
+            freq: self.freq,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == auxide::control::PARAM_FREQUENCY {
+            state.freq = value;
+        }
     }
 
     fn process_block(
@@ -197,7 +226,7 @@ impl NodeDef for TriangleOsc {
         let Some(out) = outputs.get_mut(0) else {
             return;
         };
-        let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let inc = freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
             let saw = 2.0 * phase - 1.0;
@@ -227,7 +256,16 @@ impl NodeDef for PulseOsc {
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        OscState { phase: 0.0 }
+        OscState {
+            phase: 0.0,
+            freq: self.freq,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == auxide::control::PARAM_FREQUENCY {
+            state.freq = value;
+        }
     }
 
     fn process_block(
@@ -241,7 +279,7 @@ impl NodeDef for PulseOsc {
             return;
         };
         let pw = self.pulse_width.clamp(0.01, 0.99);
-        let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let inc = freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         for sample in out.iter_mut() {
             let phase = state.phase;
             *sample = if phase < pw { 1.0 } else { -1.0 };
@@ -269,7 +307,16 @@ impl NodeDef for WavetableOsc {
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
-        OscState { phase: 0.0 }
+        OscState {
+            phase: 0.0,
+            freq: self.freq,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == auxide::control::PARAM_FREQUENCY {
+            state.freq = value;
+        }
     }
 
     fn process_block(
@@ -287,7 +334,7 @@ impl NodeDef for WavetableOsc {
             out.fill(0.0);
             return;
         }
-        let inc = freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let inc = freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
         let len = table.len() as f32;
         for sample in out.iter_mut() {
             let idx = (state.phase * len) as usize % table.len();
@@ -319,6 +366,16 @@ impl NodeDef for SuperSaw {
         let voices = self.voices.max(1);
         MultiPhaseState {
             phases: vec![0.0; voices],
+            freq: self.freq,
+            detune: self.detune,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        match param {
+            auxide::control::PARAM_FREQUENCY => state.freq = value,
+            auxide::control::PARAM_DETUNE => state.detune = value,
+            _ => {}
         }
     }
 
@@ -334,8 +391,8 @@ impl NodeDef for SuperSaw {
         };
         let voices = state.phases.len().max(1);
         let base_inc =
-            freq_to_phase_increment(self.freq, sample_rate) / (2.0 * std::f32::consts::PI);
-        let detune = self.detune.max(0.0);
+            freq_to_phase_increment(state.freq, sample_rate) / (2.0 * std::f32::consts::PI);
+        let detune = state.detune.max(0.0);
         for sample in out.iter_mut() {
             let mut acc = 0.0;
             for (i, phase) in state.phases.iter_mut().enumerate() {

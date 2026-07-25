@@ -1,19 +1,37 @@
-use crate::helpers::{compute_exponential_coefficient, freq_to_phase_increment};
+use crate::helpers::compute_exponential_coefficient;
+use auxide::control::{PARAM_CUTOFF, PARAM_RESONANCE};
 use auxide::graph::{Port, PortId, Rate};
 use auxide::node::NodeDef;
 
 /// State of a State Variable Filter (SVF)
+///
+/// Runtime-mutable parameters (`cutoff`, `resonance`) live in state so
+/// [`set_param`](NodeDef::set_param) can update them from a control message.
+///
+/// Uses the ZDF (Zero-Delay Feedback / Trapezoidal) SVF topology, which is
+/// guaranteed stable for all parameter values:
+/// ```text
+/// g  = tan(π · cutoff / sr)
+/// R  = resonance * 2              (0 → no resonance, 1 → self-oscillation)
+/// hp = (x - lp - R · bp) / (1 + g·(g + R))
+/// bp += g · hp
+/// lp += g · bp
+/// ```
 #[derive(Debug, Clone)]
 pub struct SvfState {
-    pub x1: f32,
-    pub x2: f32,
-    pub y1: f32,
-    pub y2: f32,
-    pub y3: f32,
-    pub y4: f32,
+    /// Current cutoff frequency (Hz), mutable via control message.
+    pub cutoff: f32,
+    /// Current resonance (0–1), mutable via control message.
+    pub resonance: f32,
+    pub bp: f32,
+    pub lp: f32,
 }
 
 /// State Variable Filter (SVF) - Lowpass, Highpass, Bandpass, Notch
+///
+/// `cutoff` and `resonance` are initial values copied into state at init;
+/// runtime changes arrive via `PARAM_CUTOFF` / `PARAM_RESONANCE` control
+/// messages.
 #[derive(Debug, Clone)]
 pub struct SvfFilter {
     pub cutoff: f32,
@@ -64,12 +82,18 @@ impl NodeDef for SvfFilter {
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
         SvfState {
-            x1: 0.0,
-            x2: 0.0,
-            y1: 0.0,
-            y2: 0.0,
-            y3: 0.0,
-            y4: 0.0,
+            cutoff: self.cutoff,
+            resonance: self.resonance,
+            bp: 0.0,
+            lp: 0.0,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        match param {
+            PARAM_CUTOFF => state.cutoff = value,
+            PARAM_RESONANCE => state.resonance = value,
+            _ => {}
         }
     }
 
@@ -86,44 +110,33 @@ impl NodeDef for SvfFilter {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let cutoff = self.cutoff
+            let cutoff = state.cutoff
                 + if cutoff_mod.is_empty() {
                     0.0
                 } else {
                     cutoff_mod[i]
                 };
-            let resonance = self.resonance
+            let resonance = state.resonance
                 + if resonance_mod.is_empty() {
                     0.0
                 } else {
                     resonance_mod[i]
                 };
 
-            let f = freq_to_phase_increment(cutoff, sample_rate) * 2.0;
-            let k = 2.0 - 2.0 * resonance.clamp(0.0, 1.0);
+            let g = (std::f32::consts::PI * cutoff / sample_rate).tan();
+            let r = resonance.clamp(0.0, 1.0) * 2.0;
+            let norm = 1.0 / (1.0 + g * (g + r));
 
             let x = input[i];
-            let x1 = state.x1;
-            let x2 = state.x2;
-            let y1 = state.y1;
-            let y2 = state.y2;
-
-            let y_hp = (x - x2) - k * y1;
-            let y_bp = y_hp * f + y1;
-            let y_lp = y_bp * f + y2;
-
-            state.x1 = x;
-            state.x2 = x1;
-            state.y1 = y_hp;
-            state.y2 = y_bp;
-            state.y3 = y_lp;
-            state.y4 = y_hp + y_lp; // notch
+            let hp = (x - state.lp - r * state.bp) * norm;
+            state.bp += g * hp;
+            state.lp += g * state.bp;
 
             output[i] = match self.mode {
-                SvfMode::Lowpass => y_lp,
-                SvfMode::Highpass => y_hp,
-                SvfMode::Bandpass => y_bp,
-                SvfMode::Notch => state.y4,
+                SvfMode::Lowpass => state.lp,
+                SvfMode::Highpass => hp,
+                SvfMode::Bandpass => state.bp,
+                SvfMode::Notch => hp + state.lp,
             };
         }
     }
@@ -136,6 +149,9 @@ pub struct LadderState {
     pub z2: f32,
     pub z3: f32,
     pub z4: f32,
+    pub cutoff: f32,
+    pub resonance: f32,
+    pub drive: f32,
 }
 
 /// Ladder Filter (Moog-style)
@@ -185,6 +201,17 @@ impl NodeDef for LadderFilter {
             z2: 0.0,
             z3: 0.0,
             z4: 0.0,
+            cutoff: self.cutoff,
+            resonance: self.resonance,
+            drive: self.drive,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        match param {
+            PARAM_CUTOFF => state.cutoff = value,
+            PARAM_RESONANCE => state.resonance = value,
+            _ => {}
         }
     }
 
@@ -201,13 +228,13 @@ impl NodeDef for LadderFilter {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            let cutoff = self.cutoff
+            let cutoff = state.cutoff
                 + if cutoff_mod.is_empty() {
                     0.0
                 } else {
                     cutoff_mod[i]
                 };
-            let resonance = self.resonance
+            let resonance = state.resonance
                 + if resonance_mod.is_empty() {
                     0.0
                 } else {
@@ -220,7 +247,7 @@ impl NodeDef for LadderFilter {
             let t = (1.0 - p) * 1.386249;
             let _t2 = 12.0 + t * t;
 
-            let x = input[i] * self.drive;
+            let x = input[i] * state.drive;
 
             let y4 = x - k * (state.z4 + state.z3 + state.z2 + state.z1);
             let y3 = y4 * t + state.z4;

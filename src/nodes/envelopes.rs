@@ -20,6 +20,13 @@ pub enum AdsrPhase {
 }
 
 /// ADSR Envelope
+///
+/// Two gate modes:
+/// - **Audio-rate** (default): connect a gate signal to `input[0]`.
+///   The envelope tracks the signal sample-by-sample (gate_on = sample > 0.5).
+/// - **Control-message**: leave `input[0]` unconnected (`required_inputs = 0`).
+///   Drive the envelope via `ControlMsg::TriggerGate`, which calls the `gate()` method.
+///   Useful when the envelope is part of a MIDI-controlled synth voice.
 #[derive(Debug, Clone)]
 pub struct AdsrEnvelope {
     pub attack_ms: f32,
@@ -33,12 +40,10 @@ impl NodeDef for AdsrEnvelope {
     type State = AdsrState;
 
     fn input_ports(&self) -> &'static [Port] {
-        const PORTS: &[Port] = &[
-            Port {
-                id: PortId(0),
-                rate: Rate::Audio,
-            }, // gate
-        ];
+        const PORTS: &[Port] = &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }];
         PORTS
     }
 
@@ -51,7 +56,7 @@ impl NodeDef for AdsrEnvelope {
     }
 
     fn required_inputs(&self) -> usize {
-        1
+        0
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
@@ -62,6 +67,16 @@ impl NodeDef for AdsrEnvelope {
         }
     }
 
+    fn gate(&self, state: &mut Self::State, on: bool) {
+        if on {
+            state.phase = AdsrPhase::Attack;
+            state.time_accum = 0.0;
+        } else if !matches!(state.phase, AdsrPhase::Idle) {
+            state.phase = AdsrPhase::Release;
+            state.time_accum = 0.0;
+        }
+    }
+
     fn process_block(
         &self,
         state: &mut Self::State,
@@ -69,13 +84,20 @@ impl NodeDef for AdsrEnvelope {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let gate = &inputs[0];
         let output = &mut outputs[0];
-
         let dt = 1.0 / sample_rate;
 
-        for i in 0..gate.len() {
-            let gate_on = gate[i] > 0.5;
+        let use_audio_gate = !inputs.is_empty() && !inputs[0].is_empty();
+        let gate = if use_audio_gate { inputs[0] } else { &[] };
+
+        let n = if use_audio_gate {
+            gate.len()
+        } else {
+            output.len()
+        };
+
+        for i in 0..n {
+            let gate_on = use_audio_gate && gate[i] > 0.5;
 
             match state.phase {
                 AdsrPhase::Idle => {
@@ -97,7 +119,7 @@ impl NodeDef for AdsrEnvelope {
                         state.phase = AdsrPhase::Decay;
                         state.time_accum = 0.0;
                     }
-                    if !gate_on {
+                    if use_audio_gate && !gate_on {
                         state.phase = AdsrPhase::Release;
                         state.time_accum = 0.0;
                     }
@@ -114,14 +136,14 @@ impl NodeDef for AdsrEnvelope {
                     if state.time_accum >= self.decay_ms / 1000.0 {
                         state.phase = AdsrPhase::Sustain;
                     }
-                    if !gate_on {
+                    if use_audio_gate && !gate_on {
                         state.phase = AdsrPhase::Release;
                         state.time_accum = 0.0;
                     }
                 }
                 AdsrPhase::Sustain => {
                     state.level = self.sustain_level;
-                    if !gate_on {
+                    if use_audio_gate && !gate_on {
                         state.phase = AdsrPhase::Release;
                         state.time_accum = 0.0;
                     }
@@ -193,7 +215,7 @@ impl NodeDef for ArEnvelope {
     }
 
     fn required_inputs(&self) -> usize {
-        1
+        0
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
@@ -204,6 +226,16 @@ impl NodeDef for ArEnvelope {
         }
     }
 
+    fn gate(&self, state: &mut Self::State, on: bool) {
+        if on {
+            state.phase = ArPhase::Attack;
+            state.time_accum = 0.0;
+        } else if !matches!(state.phase, ArPhase::Idle) {
+            state.phase = ArPhase::Release;
+            state.time_accum = 0.0;
+        }
+    }
+
     fn process_block(
         &self,
         state: &mut Self::State,
@@ -211,13 +243,20 @@ impl NodeDef for ArEnvelope {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let gate = &inputs[0];
         let output = &mut outputs[0];
 
         let dt = 1.0 / sample_rate;
 
-        for i in 0..gate.len() {
-            let gate_on = gate[i] > 0.5;
+        let use_audio_gate = !inputs.is_empty() && !inputs[0].is_empty();
+        let gate = if use_audio_gate { inputs[0] } else { &[] };
+        let n = if use_audio_gate {
+            gate.len()
+        } else {
+            output.len()
+        };
+
+        for i in 0..n {
+            let gate_on = use_audio_gate && gate[i] > 0.5;
 
             match state.phase {
                 ArPhase::Idle => {
@@ -310,7 +349,7 @@ impl NodeDef for AdEnvelope {
     }
 
     fn required_inputs(&self) -> usize {
-        1
+        0
     }
 
     fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
@@ -321,6 +360,16 @@ impl NodeDef for AdEnvelope {
         }
     }
 
+    fn gate(&self, state: &mut Self::State, on: bool) {
+        if on {
+            state.phase = AdPhase::Attack;
+            state.time_accum = 0.0;
+        } else if !matches!(state.phase, AdPhase::Idle) {
+            state.phase = AdPhase::Decay;
+            state.time_accum = 0.0;
+        }
+    }
+
     fn process_block(
         &self,
         state: &mut Self::State,
@@ -328,13 +377,20 @@ impl NodeDef for AdEnvelope {
         outputs: &mut [Vec<f32>],
         sample_rate: f32,
     ) {
-        let gate = &inputs[0];
         let output = &mut outputs[0];
 
         let dt = 1.0 / sample_rate;
 
-        for i in 0..gate.len() {
-            let gate_on = gate[i] > 0.5;
+        let use_audio_gate = !inputs.is_empty() && !inputs[0].is_empty();
+        let gate = if use_audio_gate { inputs[0] } else { &[] };
+        let n = if use_audio_gate {
+            gate.len()
+        } else {
+            output.len()
+        };
+
+        for i in 0..n {
+            let gate_on = use_audio_gate && gate[i] > 0.5;
 
             match state.phase {
                 AdPhase::Idle => {
