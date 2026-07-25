@@ -1,6 +1,7 @@
 use auxide::node::NodeDef;
 use auxide_dsp::{
-    AllpassFilter, BiquadFilter, CombFilter, FormantFilter, LadderFilter, SvfFilter, SvfMode,
+    AllpassFilter, BiquadFilter, CombFilter, FormantFilter, LadderFilter, OnePoleFilter,
+    ParametricEq, ResonantDrive, SvfFilter, SvfMode,
 };
 
 fn non_silent(output: &[f32]) -> bool {
@@ -182,6 +183,98 @@ fn svf_highpass_blocks_dc() {
 }
 
 #[cfg(test)]
+#[test]
+fn one_pole_lowpass_passes_dc_attenuates_hf() {
+    let node = OnePoleFilter {
+        cutoff: 1000.0,
+        highpass: false,
+    };
+    let dc = vec![1.0; 64];
+    let mut state = node.init_state(44100.0, 64);
+    let mut out = vec![vec![0.0; 64]];
+    for _ in 0..20 {
+        node.process_block(&mut state, &[&dc], &mut out, 44100.0);
+    }
+    let dc_gain = out[0].iter().sum::<f32>() / 64.0;
+    assert!(dc_gain > 0.9, "1-pole LP must pass DC, got {dc_gain}");
+
+    let hf: Vec<f32> = (0..64)
+        .map(|i| (2.0 * std::f32::consts::PI * 8000.0 * i as f32 / 44100.0).sin())
+        .collect();
+    let mut s2 = node.init_state(44100.0, 64);
+    let mut out2 = vec![vec![0.0; 64]];
+    for _ in 0..20 {
+        node.process_block(&mut s2, &[&hf], &mut out2, 44100.0);
+    }
+    let in_rms = (hf.iter().map(|v| v * v).sum::<f32>() / 64.0).sqrt();
+    let out_rms = (out2[0].iter().map(|v| v * v).sum::<f32>() / 64.0).sqrt();
+    assert!(
+        out_rms / in_rms < 0.3,
+        "1-pole LP must attenuate 8 kHz, ratio {}",
+        out_rms / in_rms
+    );
+}
+
+#[test]
+fn parametric_eq_boosts_center() {
+    let node = ParametricEq {
+        freq: 1000.0,
+        q: 1.0,
+        gain_db: 12.0,
+    };
+    let mut state = node.init_state(44100.0, 64);
+    let tone: Vec<f32> = (0..64)
+        .map(|i| (2.0 * std::f32::consts::PI * 1000.0 * i as f32 / 44100.0).sin())
+        .collect();
+    let mut out = vec![vec![0.0; 64]];
+    node.process_block(&mut state, &[&tone], &mut out, 44100.0);
+    let boosted = out[0].iter().map(|v| v.abs()).sum::<f32>() / 64.0;
+    assert!(
+        boosted > 1.5,
+        "PEQ should boost 1 kHz by ~12 dB, got {boosted}"
+    );
+}
+
+#[test]
+fn resonant_drive_mix_zero_passthrough() {
+    let node = ResonantDrive {
+        drive: 5.0,
+        mix: 0.0,
+    };
+    let inp = vec![0.3; 64];
+    let mut state = node.init_state(44100.0, 64);
+    let mut out = vec![vec![0.0; 64]];
+    node.process_block(&mut state, &[&inp], &mut out, 44100.0);
+    let diff = out[0]
+        .iter()
+        .zip(inp.iter())
+        .map(|(a, b)| (a - b).abs())
+        .sum::<f32>();
+    assert!(diff < 1e-5, "mix=0 should pass through untouched");
+}
+
+#[test]
+fn ladder_cutoff_clamps() {
+    let node = LadderFilter {
+        cutoff: 1000.0,
+        resonance: 0.5,
+        drive: 1.0,
+    };
+    let mut state = node.init_state(44100.0, 64);
+    node.set_param(&mut state, auxide::control::PARAM_CUTOFF, 1e9);
+    assert!(
+        state.cutoff <= 20_000.0,
+        "cutoff must clamp to <=20kHz, got {}",
+        state.cutoff
+    );
+    node.set_param(&mut state, auxide::control::PARAM_CUTOFF, -100.0);
+    assert!(
+        state.cutoff >= 20.0,
+        "cutoff must clamp to >=20Hz, got {}",
+        state.cutoff
+    );
+}
+
 mod property_tests {
     use super::*;
     use proptest::prelude::*;

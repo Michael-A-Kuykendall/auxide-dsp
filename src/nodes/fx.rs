@@ -518,6 +518,137 @@ impl NodeDef for SimpleReverb {
     }
 }
 
+/// State of a Stereo Reverb
+#[derive(Debug, Clone)]
+pub struct StereoReverbState {
+    pub comb_l1: Vec<f32>,
+    pub comb_l2: Vec<f32>,
+    pub comb_l3: Vec<f32>,
+    pub comb_l4: Vec<f32>,
+    pub comb_r1: Vec<f32>,
+    pub comb_r2: Vec<f32>,
+    pub comb_r3: Vec<f32>,
+    pub comb_r4: Vec<f32>,
+    pub idx_l: usize,
+    pub idx_r: usize,
+}
+
+/// Stereo Reverb: two parallel comb networks (L/R) with cross-feedback so the
+/// reverb tail has stereo width. A mono input (single port) is upmixed to
+/// stereo; a stereo input (two ports) is processed independently with coupling.
+#[derive(Debug, Clone)]
+pub struct StereoReverb {
+    pub decay: f32,
+    pub mix: f32,
+    /// Amount of cross-feedback between L and R tails (0 = independent, 1 = fully coupled).
+    pub width: f32,
+}
+
+impl NodeDef for StereoReverb {
+    type State = StereoReverbState;
+
+    fn input_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            }, // left / mono
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            }, // right (optional)
+        ];
+        PORTS
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        const PORTS: &[Port] = &[
+            Port {
+                id: PortId(0),
+                rate: Rate::Audio,
+            },
+            Port {
+                id: PortId(1),
+                rate: Rate::Audio,
+            },
+        ];
+        PORTS
+    }
+
+    fn required_inputs(&self) -> usize {
+        1
+    }
+
+    fn init_state(&self, sample_rate: f32, _block_size: usize) -> Self::State {
+        let lens = [0.0297, 0.0371, 0.0411, 0.0437]
+            .iter()
+            .map(|&s| (s * sample_rate) as usize)
+            .collect::<Vec<_>>();
+        StereoReverbState {
+            comb_l1: vec![0.0; lens[0]],
+            comb_l2: vec![0.0; lens[1]],
+            comb_l3: vec![0.0; lens[2]],
+            comb_l4: vec![0.0; lens[3]],
+            comb_r1: vec![0.0; lens[0]],
+            comb_r2: vec![0.0; lens[1]],
+            comb_r3: vec![0.0; lens[2]],
+            comb_r4: vec![0.0; lens[3]],
+            idx_l: 0,
+            idx_r: 0,
+        }
+    }
+
+    fn process_block(
+        &self,
+        state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        _sample_rate: f32,
+    ) {
+        let left = &inputs[0];
+        let right = if inputs.len() > 1 {
+            inputs[1]
+        } else {
+            inputs[0]
+        };
+        let (out_l, out_r) = outputs.split_at_mut(1);
+        let out_l = &mut out_l[0];
+        let out_r = &mut out_r[0];
+        let width = self.width.clamp(0.0, 1.0);
+
+        for i in 0..left.len() {
+            let dl = state.comb_l1[state.idx_l]
+                + state.comb_l2[state.idx_l]
+                + state.comb_l3[state.idx_l]
+                + state.comb_l4[state.idx_l];
+            let dr = state.comb_r1[state.idx_r]
+                + state.comb_r2[state.idx_r]
+                + state.comb_r3[state.idx_r]
+                + state.comb_r4[state.idx_r];
+            let rev_l = dl * 0.25;
+            let rev_r = dr * 0.25;
+
+            out_l[i] = left[i] * (1.0 - self.mix) + rev_l * self.mix;
+            out_r[i] = right[i] * (1.0 - self.mix) + rev_r * self.mix;
+
+            // Feedback with cross-coupling for stereo width.
+            let fb_l = left[i] + (rev_l + width * rev_r) * self.decay;
+            let fb_r = right[i] + (rev_r + width * rev_l) * self.decay;
+            state.comb_l1[state.idx_l] = fb_l;
+            state.comb_l2[state.idx_l] = fb_l;
+            state.comb_l3[state.idx_l] = fb_l;
+            state.comb_l4[state.idx_l] = fb_l;
+            state.comb_r1[state.idx_r] = fb_r;
+            state.comb_r2[state.idx_r] = fb_r;
+            state.comb_r3[state.idx_r] = fb_r;
+            state.comb_r4[state.idx_r] = fb_r;
+
+            state.idx_l = (state.idx_l + 1) % state.comb_l1.len();
+            state.idx_r = (state.idx_r + 1) % state.comb_r1.len();
+        }
+    }
+}
+
 /// State of a MultitapDelay
 #[derive(Debug, Clone)]
 pub struct MultitapDelayState {

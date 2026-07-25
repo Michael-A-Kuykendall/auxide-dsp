@@ -1,6 +1,7 @@
 use auxide::node::NodeDef;
 use auxide_dsp::{
-    Chorus, ConvolutionReverb, Delay, Flanger, MultitapDelay, Phaser, SimpleReverb, Tremolo,
+    Chorus, ConvolutionReverb, Delay, Flanger, MultitapDelay, Phaser, SimpleReverb, StereoReverb,
+    Tremolo,
 };
 
 fn non_silent(output: &[f32]) -> bool {
@@ -116,6 +117,22 @@ fn tremolo_runs() {
     let mut out = vec![vec![0.0; 64]];
     node.process_block(&mut state, &[&[1.0; 64]], &mut out, 44100.0);
     assert!(non_silent(&out[0]));
+}
+
+#[test]
+fn stereo_reverb_produces_two_channels() {
+    let node = StereoReverb {
+        decay: 0.5,
+        mix: 0.5,
+        width: 0.7,
+    };
+    let l = vec![1.0; 64];
+    let r = vec![0.5; 64];
+    let mut state = node.init_state(44100.0, 64);
+    let mut out = vec![vec![0.0; 64], vec![0.0; 64]];
+    node.process_block(&mut state, &[&l, &r], &mut out, 44100.0);
+    assert!(non_silent(&out[0]), "left channel must be non-silent");
+    assert!(non_silent(&out[1]), "right channel must be non-silent");
 }
 
 #[cfg(test)]

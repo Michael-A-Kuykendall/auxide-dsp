@@ -209,8 +209,11 @@ impl NodeDef for LadderFilter {
 
     fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
         match param {
-            PARAM_CUTOFF => state.cutoff = value,
-            PARAM_RESONANCE => state.resonance = value,
+            // Clamp the cutoff to a sane audio range so a runaway control message
+            // cannot push the filter past Nyquist (which would alias) or below
+            // DC (degenerate).
+            PARAM_CUTOFF => state.cutoff = value.clamp(20.0, 20_000.0),
+            PARAM_RESONANCE => state.resonance = value.clamp(0.0, 1.0),
             _ => {}
         }
     }
@@ -575,6 +578,235 @@ impl NodeDef for AllpassFilter {
             state.buffer[state.index] = input[i] + self.gain * delayed;
             state.index = (state.index + 1) % self.delay_samples;
             output[i] = y;
+        }
+    }
+}
+
+/// State of a 1-pole utility filter.
+#[derive(Debug, Clone)]
+pub struct OnePoleState {
+    y: f32,
+}
+
+/// 1-pole utility filter (lowpass / highpass).
+///
+/// Cheap, unconditionally stable first-order filter useful for DC blockers,
+/// slews, and gentle tone shaping where a full SVF is overkill.
+#[derive(Debug, Clone, Copy)]
+pub struct OnePoleFilter {
+    pub cutoff: f32,
+    pub highpass: bool,
+}
+
+impl NodeDef for OnePoleFilter {
+    type State = OnePoleState;
+
+    fn input_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn required_inputs(&self) -> usize {
+        1
+    }
+
+    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
+        OnePoleState { y: 0.0 }
+    }
+
+    fn process_block(
+        &self,
+        state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        sample_rate: f32,
+    ) {
+        let input = &inputs[0];
+        let output = &mut outputs[0];
+        // One-pole coefficient: g in (0,1). Larger g = brighter (LP) / darker (HP).
+        let g = (-2.0 * std::f32::consts::PI * self.cutoff / sample_rate).exp();
+        let g = g.clamp(0.0, 0.999_999);
+        for i in 0..input.len() {
+            let lp = state.y + g * (input[i] - state.y);
+            state.y = lp;
+            output[i] = if self.highpass { input[i] - lp } else { lp };
+        }
+    }
+}
+
+/// State of a parametric (peaking) EQ.
+#[derive(Debug, Clone)]
+pub struct ParametricEqState {
+    x1: f32,
+    x2: f32,
+    y1: f32,
+    y2: f32,
+    freq: f32,
+    q: f32,
+    gain_db: f32,
+}
+
+/// Parametric EQ (peaking filter) via the Audio EQ Cookbook biquad.
+#[derive(Debug, Clone, Copy)]
+pub struct ParametricEq {
+    pub freq: f32,
+    pub q: f32,
+    pub gain_db: f32,
+}
+
+impl NodeDef for ParametricEq {
+    type State = ParametricEqState;
+
+    fn input_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn required_inputs(&self) -> usize {
+        1
+    }
+
+    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
+        ParametricEqState {
+            x1: 0.0,
+            x2: 0.0,
+            y1: 0.0,
+            y2: 0.0,
+            freq: self.freq,
+            q: self.q,
+            gain_db: self.gain_db,
+        }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        match param {
+            PARAM_CUTOFF => state.freq = value,
+            // Reuse PARAM_RESONANCE slot to carry Q for the EQ.
+            PARAM_RESONANCE => state.q = value.max(0.1),
+            _ => {}
+        }
+    }
+
+    fn process_block(
+        &self,
+        state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        sample_rate: f32,
+    ) {
+        let input = &inputs[0];
+        let output = &mut outputs[0];
+        let a0;
+        let a1;
+        let a2;
+        let b0;
+        let b1;
+        let b2;
+        {
+            let a = (2.0 * std::f32::consts::PI * state.freq / sample_rate).cos();
+            let alpha = state.freq / sample_rate.max(1.0) / (2.0 * state.q);
+            let a0d = 1.0 + alpha;
+            a0 = 1.0;
+            a1 = -2.0 * a;
+            a2 = 1.0 - alpha;
+            let g = 10.0_f32.powf(state.gain_db / 40.0);
+            b0 = (1.0 + alpha * g) / a0d;
+            b1 = -2.0 * a / a0d;
+            b2 = (1.0 - alpha * g) / a0d;
+            let _ = a0d;
+        }
+        let (a1, a2) = (a1 / a0, a2 / a0);
+        for i in 0..input.len() {
+            let x = input[i];
+            let y = b0 * x + b1 * state.x1 + b2 * state.x2 - a1 * state.y1 - a2 * state.y2;
+            state.x2 = state.x1;
+            state.x1 = x;
+            state.y2 = state.y1;
+            state.y1 = y;
+            output[i] = y;
+        }
+    }
+}
+
+/// State of a resonant drive (saturation) node.
+#[derive(Debug, Clone)]
+pub struct ResonantDriveState {
+    slope: f32,
+}
+
+/// Resonant drive: a tanh saturator that adds harmonics ("drive") and blends
+/// the driven signal with the dry. Useful to push a resonant filter into
+/// self-oscillation-like character or to warm up a voice.
+#[derive(Debug, Clone, Copy)]
+pub struct ResonantDrive {
+    pub drive: f32,
+    pub mix: f32,
+}
+
+impl NodeDef for ResonantDrive {
+    type State = ResonantDriveState;
+
+    fn input_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn output_ports(&self) -> &'static [Port] {
+        &[Port {
+            id: PortId(0),
+            rate: Rate::Audio,
+        }]
+    }
+
+    fn required_inputs(&self) -> usize {
+        1
+    }
+
+    fn init_state(&self, _sample_rate: f32, _block_size: usize) -> Self::State {
+        ResonantDriveState { slope: 0.0 }
+    }
+
+    fn set_param(&self, state: &mut Self::State, param: u8, value: f32) {
+        if param == PARAM_CUTOFF {
+            state.slope = value;
+        }
+    }
+
+    fn process_block(
+        &self,
+        state: &mut Self::State,
+        inputs: &[&[f32]],
+        outputs: &mut [Vec<f32>],
+        _sample_rate: f32,
+    ) {
+        let input = &inputs[0];
+        let output = &mut outputs[0];
+        // `drive` determines saturation amount; `mix` blends dry/wet.
+        let drive = self.drive.max(0.0);
+        let mix = self.mix.clamp(0.0, 1.0);
+        for i in 0..input.len() {
+            let wet = (state.slope + input[i] * drive).tanh();
+            output[i] = input[i] * (1.0 - mix) + wet * mix;
         }
     }
 }
