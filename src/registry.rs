@@ -16,7 +16,7 @@ use crate::nodes::filters::{
     AllpassFilter, BiquadFilter, CombFilter, FormantFilter, LadderFilter, OnePoleFilter,
     ParametricEq, ResonantDrive, SvfFilter, SvfMode,
 };
-use crate::nodes::fx::{Chorus, Delay, Flanger, Phaser, Tremolo};
+use crate::nodes::fx::{Chorus, Delay, Flanger, Phaser, SimpleReverb, StereoReverb, Tremolo};
 use crate::nodes::lfo::{Lfo, LfoWaveform};
 use crate::nodes::oscillators::{
     BrownNoise, PinkNoise, PulseOsc, SawOsc, SquareOsc, SuperSaw, TriangleOsc, WhiteNoise,
@@ -131,6 +131,23 @@ pub fn register_dsp_ugens(reg: &mut Registry) {
         external(ResonantDrive {
             drive: param_or(p, "drive", 1.0),
             mix: param_or(p, "mix", 0.5),
+        })
+    });
+
+    // ---- Reverbs ---------------------------------------------------------
+    // `convolution_reverb` is loaded from an IR file via `ConvolutionReverb::from_wav`
+    // (see `auxide-dsp-m13`); it is not built from a `ParamMap` here.
+    reg.register("simple_reverb", |p: &ParamMap| {
+        external(SimpleReverb {
+            decay: param_or(p, "decay", 0.5),
+            mix: param_or(p, "mix", 0.3),
+        })
+    });
+    reg.register("stereo_reverb", |p: &ParamMap| {
+        external(StereoReverb {
+            decay: param_or(p, "decay", 0.5),
+            mix: param_or(p, "mix", 0.3),
+            width: param_or(p, "width", 0.5),
         })
     });
 
