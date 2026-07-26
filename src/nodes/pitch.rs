@@ -125,7 +125,21 @@ pub struct PitchDetectorState {
     pub period: f32,
 }
 
-/// Pitch Detector (simple zero-crossing)
+/// Pitch Detector — **crude** zero-crossing estimator (scoped as crude per
+/// `auxide-dsp-1ps`; NOT autocorrelation/FFT).
+///
+/// # Documented limits
+/// - Estimates fundamental frequency by measuring the period between
+///   consecutive **positive-going** zero crossings. This yields a full-cycle
+///   period (a half-cycle trigger would double the reported frequency).
+/// - Assumes a **monophonic, single-tone** input with one zero crossing per
+///   period. Polyphonic or harmonically rich signals, DC offset, or noise
+///   near the zero axis will produce incorrect readings.
+/// - Output is held constant between crossings; it is not a smoothed or
+///   interpolated pitch estimate. Accuracy degrades for very low frequencies
+///   (few samples per period) and for frequencies above `sample_rate / 2`.
+/// - For robust polyphonic/low-latency detection, replace this with an
+///   autocorrelation or FFT-based estimator.
 #[derive(Debug, Clone)]
 pub struct PitchDetector;
 
@@ -170,10 +184,11 @@ impl NodeDef for PitchDetector {
         let output = &mut outputs[0];
 
         for i in 0..input.len() {
-            if (state.prev_sample <= 0.0 && input[i] > 0.0)
-                || (state.prev_sample >= 0.0 && input[i] < 0.0)
-            {
-                // zero crossing
+            // Trigger only on the positive-going zero crossing so the measured
+            // period is a full cycle (not a half-cycle, which would double the
+            // reported frequency). This is the "crude" scope of the bead: a
+            // zero-crossing detector, correct for simple tones.
+            if state.prev_sample <= 0.0 && input[i] > 0.0 {
                 let freq = sample_rate / state.period.max(1.0);
                 output[i] = freq;
                 state.period = 0.0;

@@ -632,11 +632,15 @@ impl NodeDef for OnePoleFilter {
     ) {
         let input = &inputs[0];
         let output = &mut outputs[0];
-        // One-pole coefficient: g in (0,1). Larger g = brighter (LP) / darker (HP).
+        // One-pole LP/HP. Pole location g in (0,1); larger g = more smoothing
+        // (darker). The input weight is (1 - g) and the previous output carries
+        // weight g, i.e. lp = y + (1-g)*(x - y). The previous code swapped
+        // these weights, which turned the lowpass into a highpass.
         let g = (-2.0 * std::f32::consts::PI * self.cutoff / sample_rate).exp();
         let g = g.clamp(0.0, 0.999_999);
+        let a = 1.0 - g;
         for i in 0..input.len() {
-            let lp = state.y + g * (input[i] - state.y);
+            let lp = state.y + a * (input[i] - state.y);
             state.y = lp;
             output[i] = if self.highpass { input[i] - lp } else { lp };
         }
@@ -721,17 +725,18 @@ impl NodeDef for ParametricEq {
         let b1;
         let b2;
         {
-            let a = (2.0 * std::f32::consts::PI * state.freq / sample_rate).cos();
-            let alpha = state.freq / sample_rate.max(1.0) / (2.0 * state.q);
-            let a0d = 1.0 + alpha;
+            // Audio EQ Cookbook peaking EQ (RBJ biquad).
+            let w0 = 2.0 * std::f32::consts::PI * state.freq / sample_rate;
+            let cos_w0 = w0.cos();
+            let a = 10.0_f32.powf(state.gain_db / 40.0); // A = 10^(dB/40)
+            let alpha = w0.sin() / (2.0 * state.q);
+            let a0d = 1.0 + alpha / a;
             a0 = 1.0;
-            a1 = -2.0 * a;
-            a2 = 1.0 - alpha;
-            let g = 10.0_f32.powf(state.gain_db / 40.0);
-            b0 = (1.0 + alpha * g) / a0d;
-            b1 = -2.0 * a / a0d;
-            b2 = (1.0 - alpha * g) / a0d;
-            let _ = a0d;
+            a1 = -2.0 * cos_w0 / a0d;
+            a2 = (1.0 - alpha / a) / a0d;
+            b0 = (1.0 + alpha * a) / a0d;
+            b1 = -2.0 * cos_w0 / a0d;
+            b2 = (1.0 - alpha * a) / a0d;
         }
         let (a1, a2) = (a1 / a0, a2 / a0);
         for i in 0..input.len() {

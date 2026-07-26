@@ -21,6 +21,7 @@ name = "auxide-dsp"
 version = "0.2.0"
 dependencies = [
  "auxide",
+ "hound",
  "num-complex",
  "proptest",
  "realfft",
@@ -86,6 +87,12 @@ dependencies = [
  "r-efi",
  "wasip2",
 ]
+
+[[package]]
+name = "hound"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62adaabb884c94955b19907d60019f4e145d091c75345379e70d1ee696f7854f"
 
 [[package]]
 name = "lazy_static"
