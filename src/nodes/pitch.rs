@@ -10,16 +10,24 @@ pub struct PitchShifterState {
     pub read_pos: f32,
 }
 
-/// Varispeed pitch shifter (transposition + time-stretch).
+/// Pitch shifter — **basic varispeed stub** (scoped as a basic stub per
+/// `auxide-dsp-6jy`; NOT a phase-vocoder / time-preserving shifter).
 ///
 /// The input is written into a ring buffer at the input rate and read back
 /// through a fractional read pointer that advances by
 /// `ratio = 2^(shift/12)` samples per input sample. `ratio > 1`
-/// (positive shift) reads slower -> higher pitch and longer output;
-/// `ratio < 1` reads faster -> lower pitch and shorter output. This
-/// transposes pitch AND stretches time (it is NOT a time-preserving
-/// pitch shifter). The wet signal is mixed with the dry input by
-/// `mix` (0 = dry, 1 = wet).
+/// (positive shift) reads slower -> higher pitch and LONGER output;
+/// `ratio < 1` reads faster -> lower pitch and SHORTER output.
+///
+/// # Documented limits
+/// - Transposes pitch AND stretches time (it is NOT time-preserving). A
+///   one-octave-up shift makes the signal twice as long.
+/// - No formant preservation and no cross-fading: pitch jumps at the ring
+///   wrap boundary produce audible discontinuities/artifacts.
+/// - Ring length is fixed at ~50 ms of history; very low pitches or long
+///   correlations exceed the ring and alias.
+/// - For a proper, artifact-free, time-preserving shift, replace this with a
+///   phase-vocoder or granular algorithm.
 #[derive(Debug, Clone)]
 pub struct PitchShifter {
     pub shift: f32, // semitones
@@ -198,5 +206,78 @@ impl NodeDef for PitchDetector {
             state.period += 1.0;
             state.prev_sample = input[i];
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stub_unity_shift_is_passthrough() {
+        // shift = 0 => ratio = 1 => wet read equals input; mix = 1 => output == input.
+        let node = PitchShifter {
+            shift: 0.0,
+            mix: 1.0,
+        };
+        let sr = 44100.0;
+        let input: Vec<f32> = (0..2048)
+            .map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sr).sin())
+            .collect();
+        let mut state = node.init_state(sr, 2048);
+        let mut out = vec![vec![0.0; 2048]];
+        node.process_block(&mut state, &[&input], &mut out, sr);
+        for (a, b) in input.iter().zip(out[0].iter()) {
+            assert!((a - b).abs() < 1e-5, "shift=0/mix=1 must pass through");
+        }
+    }
+
+    #[test]
+    fn stub_dry_is_passthrough_at_any_shift() {
+        // mix = 0 => only dry signal reaches output.
+        let node = PitchShifter {
+            shift: 12.0,
+            mix: 0.0,
+        };
+        let sr = 44100.0;
+        let input: Vec<f32> = (0..2048)
+            .map(|i| (2.0 * std::f32::consts::PI * 220.0 * i as f32 / sr).sin())
+            .collect();
+        let mut state = node.init_state(sr, 2048);
+        let mut out = vec![vec![0.0; 2048]];
+        node.process_block(&mut state, &[&input], &mut out, sr);
+        for (a, b) in input.iter().zip(out[0].iter()) {
+            assert!((a - b).abs() < 1e-5, "mix=0 must pass through dry");
+        }
+    }
+
+    #[test]
+    fn stub_positive_shift_transposes_signal() {
+        // A positive shift must alter (raise) the pitch, i.e. the output must
+        // differ from a dry passthrough.
+        let dry = PitchShifter {
+            shift: 0.0,
+            mix: 1.0,
+        };
+        let wet = PitchShifter {
+            shift: 12.0,
+            mix: 1.0,
+        };
+        let sr = 44100.0;
+        let input: Vec<f32> = (0..8192)
+            .map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sr).sin())
+            .collect();
+        let mut sd = dry.init_state(sr, 8192);
+        let mut sw = wet.init_state(sr, 8192);
+        let mut out_dry = vec![vec![0.0; 8192]];
+        let mut out_wet = vec![vec![0.0; 8192]];
+        dry.process_block(&mut sd, &[&input], &mut out_dry, sr);
+        wet.process_block(&mut sw, &[&input], &mut out_wet, sr);
+        let diff: f32 = out_dry[0]
+            .iter()
+            .zip(out_wet[0].iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        assert!(diff > 1.0, "octave-up shift must transpose the signal");
     }
 }
