@@ -127,10 +127,14 @@ impl NodeDef for AdsrEnvelope {
                 AdsrPhase::Decay => {
                     state.time_accum += dt;
                     let t = (state.time_accum / (self.decay_ms / 1000.0)).min(1.0);
+                    // Linear decay falls from 1.0 (peak) to `sustain_level` as t: 0 -> 1.
+                    // `level = 1 + (sustain - 1) * t` gives 1.0 at t=0 and
+                    // `sustain_level` at t=1. (Previously `1 - t`, which rose
+                    // from sustain to 1.0 — backwards.)
                     let decay_factor = if self.curve > 0.0 {
                         (-t * self.curve).exp()
                     } else {
-                        1.0 - t
+                        t
                     };
                     state.level = 1.0 + (self.sustain_level - 1.0) * decay_factor;
                     if state.time_accum >= self.decay_ms / 1000.0 {
