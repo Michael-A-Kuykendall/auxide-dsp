@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.1] - 2026-07-29
+- **Ecosystem docs**: Updated AGENTS.md with full 7-crate Auxide ecosystem overview
+
 ## [0.2.0] - 2026-07-25
 - **Band-limited oscillators**: Triangle and pulse waveshapes now use PolyBLEP anti-aliasing (integrate a band-limited square + 5 Hz DC-block); WavetableOsc uses linear interpolation instead of truncation.
 - **RT safety verification**: Confirmed all DSP nodes maintain zero allocations during process_block.
