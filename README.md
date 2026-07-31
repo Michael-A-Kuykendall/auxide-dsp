@@ -54,25 +54,176 @@ auxide = "0.3"
 auxide-dsp = "0.2"
 ```
 
-## Example
+## Examples
+
+### SynthBuilder with Envelope
+
+<details>
+<summary>Expand</summary>
 
 ```rust
 use auxide_dsp::builders::SynthBuilder;
 use auxide_dsp::nodes::oscillators::SawOsc;
 use auxide_dsp::nodes::filters::SvfFilter;
 use auxide_dsp::nodes::filters::SvfMode;
+use auxide_dsp::nodes::envelopes::AdsrEnvelope;
+use auxide::plan::Plan;
 
-let graph = SynthBuilder::new()
-    .add_oscillator(SawOsc { freq: 440.0 })
+let (graph, plan) = SynthBuilder::new()
+    .add_oscillator(SawOsc { freq: 220.0 })
     .add_filter(SvfFilter {
-        cutoff: 1000.0,
-        resonance: 0.5,
+        cutoff: 2000.0,
+        resonance: 0.3,
         mode: SvfMode::Lowpass,
     })
-    .build_graph();
+    .add_envelope(AdsrEnvelope {
+        attack_ms: 100.0,
+        decay_ms: 50.0,
+        sustain_level: 0.7,
+        release_ms: 200.0,
+        curve: 2.0,
+    })
+    .build(64)
+    .expect("synth builds");
+
+let mut runtime = auxide::rt::Runtime::new(plan, &graph, 44100.0);
+let mut out = vec![0.0f32; 64];
+runtime.process_block(&mut out).unwrap();
+```
+</details>
+
+### Effects Chain with Modulation
+
+<details>
+<summary>Expand</summary>
+
+```rust
+use auxide_dsp::nodes::oscillators::SawOsc;
+use auxide_dsp::nodes::filters::SvfFilter;
+use auxide_dsp::nodes::fx::{Delay, Tremolo, SimpleReverb};
+use auxide_dsp::nodes::dynamics::Compressor;
+use auxide_dsp::nodes::shapers::WaveShaper;
+use auxide::graph::{Graph, NodeType, NodeType::External, PortId, Rate};
+use auxide_dsp::nodes::filters::SvfMode;
+use auxide::plan::Plan;
+
+let mut graph = Graph::new();
+let osc = graph.add_external_node(SawOsc { freq: 220.0 });
+let filter = graph.add_external_node(SvfFilter {
+    cutoff: 800.0, resonance: 0.4, mode: SvfMode::Lowpass,
+});
+let tremolo = graph.add_external_node(Tremolo { rate: 4.0, depth: 0.6 });
+let delay = graph.add_external_node(Delay { delay_ms: 200.0, feedback: 0.4, mix: 0.5 });
+let reverb = graph.add_external_node(SimpleReverb { decay: 0.5, mix: 0.3 });
+let compressor = graph.add_external_node(Compressor {
+    threshold: 0.5, ratio: 4.0, attack_ms: 5.0, release_ms: 50.0, makeup_gain: 2.0,
+});
+let waveshaper = graph.add_external_node(WaveShaper { drive: 0.3, mix: 0.7 });
+let sink = graph.add_node(NodeType::OutputSink);
+
+// Chain: osc → filter → tremolo → delay → reverb → compressor → waveshaper → output
+for &(from, to) in &[
+    (osc, filter), (filter, tremolo), (tremolo, delay),
+    (delay, reverb), (reverb, compressor), (compressor, waveshaper), (waveshaper, sink),
+] {
+    graph.add_edge(auxide::graph::Edge {
+        from_node: from, from_port: PortId(0),
+        to_node: to, to_port: PortId(0),
+        rate: Rate::Audio,
+    }).unwrap();
+}
+
+let plan = Plan::compile(&graph, 512).unwrap();
+```
+</details>
+
+### Sample Playback (ROMpler Voice)
+
+<details>
+<summary>Expand</summary>
+
+```rust
+use std::sync::Arc;
+use auxide_dsp::nodes::sampler::Sampler;
+use auxide::graph::{Graph, NodeType, PortId, Rate, NodeType::External};
+use auxide::plan::Plan;
+
+// Generate a test sample (440 Hz sine, 1 second)
+let sr = 44100.0;
+let sample: Arc<Vec<f32>> = Arc::new(
+    (0..sr as usize).map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sr).sin()).collect()
+);
+
+let mut graph = Graph::new();
+let sampler = graph.add_external_node(Sampler::new(sample, sr, 69, false));
+let sink = graph.add_node(NodeType::OutputSink);
+graph.add_edge(auxide::graph::Edge {
+    from_node: sampler, from_port: PortId(0),
+    to_node: sink, to_port: PortId(0),
+    rate: Rate::Audio,
+}).unwrap();
+let plan = Plan::compile(&graph, 64).unwrap();
+let mut runtime = auxide::rt::Runtime::new(plan, &graph, sr);
+let mut out = vec![0.0f32; 64];
+runtime.process_block(&mut out).unwrap();
+```
+</details>
+
+### Filter Frequency Modulation
+
+The SVF and Ladder filters expose **modulation input ports**: connect a control-rate or audio-rate source to ports 1 (cutoff mod) or 2 (resonance mod) for dynamic filter sweeps:
+
+```rust
+use auxide_dsp::nodes::oscillators::SawOsc;
+use auxide_dsp::nodes::filters::{SvfFilter, SvfMode};
+use auxide_dsp::nodes::lfo::{Lfo, LfoWaveform};
+use auxide::graph::{Graph, NodeType, PortId, Rate, NodeType::External};
+
+let mut graph = Graph::new();
+let osc = graph.add_external_node(SawOsc { freq: 220.0 });
+let lfo = graph.add_external_node(Lfo {
+    frequency: 0.5, waveform: LfoWaveform::Triangle,
+    amplitude: 2000.0, offset: 1000.0,
+});
+let filter = graph.add_external_node(SvfFilter {
+    cutoff: 1000.0, resonance: 0.3, mode: SvfMode::Lowpass,
+});
+let sink = graph.add_node(NodeType::OutputSink);
+
+// Audio path: osc -> filter (audio input)
+graph.add_edge(Edge { from_node: osc, from_port: PortId(0),
+    to_node: filter, to_port: PortId(0), rate: Rate::Audio }).unwrap();
+// Modulation: LFO -> filter cutoff mod port
+graph.add_edge(Edge { from_node: lfo, from_port: PortId(0),
+    to_node: filter, to_port: PortId(1), rate: Rate::Control }).unwrap();
+// Output
+graph.add_edge(Edge { from_node: filter, from_port: PortId(0),
+    to_node: sink, to_port: PortId(0), rate: Rate::Audio }).unwrap();
 ```
 
-See `examples/` for more usage.
+See [`examples/`](examples/) for complete, running demos.
+
+## 40+ Registered Nodes
+
+All nodes are registered in the `Registry` for name-based construction:
+
+```rust
+use auxide_dsp::registry::register_dsp_ugens;
+let mut reg = auxide::registry::Registry::new();
+register_dsp_ugens(&mut reg); // registers "saw", "svf", "adsr", "delay", "compressor", etc.
+```
+
+| Category | Nodes |
+|----------|-------|
+| **Oscillators** | SawOsc, SquareOsc, TriangleOsc, PulseOsc, WavetableOsc, SuperSaw, WhiteNoise, PinkNoise, BrownNoise |
+| **Filters** | SvfFilter, LadderFilter, CombFilter, FormantFilter, BiquadFilter, AllpassFilter, OnePoleFilter, ParametricEq, ResonantDrive |
+| **Envelopes** | AdsrEnvelope, ArEnvelope, AdEnvelope |
+| **FX** | Delay, Chorus, Flanger, Phaser, SimpleReverb, StereoReverb, MultitapDelay, ConvolutionReverb (WAV IR), Tremolo |
+| **Dynamics** | Compressor, Limiter, NoiseGate, Expander |
+| **Shapers** | WaveShaper, HardClip, SoftClip, BitCrusher, TubeSaturation, DcBlocker, Overdrive |
+| **Pitch/Time** | PitchShifter, PitchDetector |
+| **Utility** | Multiply (ring mod), RingMod, Crossfader, StereoWidth, ParamSmoother, MidSideProcessor, StereoPanner, RMSMeter, Mixer (up to 16 inputs) |
+| **Modulation** | Lfo (sine/triangle/saw/square/random), Sampler (WAV playback) |
 
 ## Community & Support
 
