@@ -1,12 +1,8 @@
 # auxide-dsp
 
-[![Trans rights](https://pride-badges.pony.workers.dev/static/v1?label=trans%20rights&stripeWidth=6&stripeColors=5BCEFA,F5A9B8,FFFFFF,F5A9B8,5BCEFA)](https://translifeline.org/)
-[![LGBTQ+ friendly](https://pride-badges.pony.workers.dev/static/v1?label=lgbtq%2B%20friendly&stripeWidth=6&stripeColors=E40303,FF8C00,FFED00,008026,24408E,732982)](https://www.thetrevorproject.org/)
-
-
 <img src="assets/auxide-dsp-logo.png" alt="auxide-dsp logo" width="400"/>
 
-[![Crates.io](https://img.shields.io/crates/v/auxide-dsp.svg)](https://crates.io/crates/auxide-dsp)
+[![Crates.io](https://img.shields.io/crates/v/auxide-dsp.svg)](https://crates.io/crates/auxide-dsp) [![Trans rights](https://pride-badges.pony.workers.dev/static/v1?label=trans%20rights&stripeWidth=6&stripeColors=5BCEFA,F5A9B8,FFFFFF,F5A9B8,5BCEFA)](https://translifeline.org/) [![LGBTQ+ friendly](https://pride-badges.pony.workers.dev/static/v1?label=lgbtq%2B%20friendly&stripeWidth=6&stripeColors=E40303,FF8C00,FFED00,008026,24408E,732982)](https://www.thetrevorproject.org/)
 [![Documentation](https://docs.rs/auxide-dsp/badge.svg)](https://docs.rs/auxide-dsp)
 [![CI](https://github.com/Michael-A-Kuykendall/auxide-dsp/workflows/CI/badge.svg)](https://github.com/Michael-A-Kuykendall/auxide-dsp/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
